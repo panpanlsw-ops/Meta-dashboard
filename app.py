@@ -56,48 +56,58 @@ section[data-testid="stSidebar"] p { color: #6b7db0 !important; font-size: 0.68r
 .tb-date  { color:rgba(255,255,255,0.8); font-size:0.75rem; }
 .tb-ls    { background:white; border-radius:4px; padding:2px 7px; display:flex; align-items:center; }
 
-/* ── Tab bar override — match mockup style ── */
+/* ── Sidebar nav links — Views section ── */
+.nav-link {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 6px; margin-bottom: 2px;
+    font-size: 0.82rem; font-weight: 500; cursor: pointer;
+    color: #8a9bc0; text-decoration: none;
+    transition: background 0.15s;
+}
+.nav-link:hover { background: rgba(255,255,255,0.06); color: #c8d0e8; }
+.nav-link.active { background: #1877F2; color: white; }
+.nav-icon { font-size: 1rem; width: 18px; text-align: center; }
+
+/* ── Tab bar — hidden labels, top horizontal strip ── */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 4px;
-    background: white;
-    border-bottom: 1px solid #e5e7eb;
-    padding: 6px 12px 0;
+    gap: 0; background: #f4f6fb;
+    border-bottom: 2px solid #e5e7eb;
+    padding: 0 16px;
 }
 .stTabs [data-baseweb="tab"] {
-    height: 34px;
-    padding: 0 16px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    border-radius: 6px 6px 0 0;
-    background: #f4f6fb;
-    border: 1px solid #e5e7eb;
-    border-bottom: none;
-    color: #6b7280;
+    height: 38px; padding: 0 20px;
+    font-size: 0.8rem; font-weight: 500;
+    background: transparent; border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px; color: #6b7280;
+    border-radius: 0;
 }
 .stTabs [aria-selected="true"] {
-    background: #1877F2 !important;
-    color: white !important;
-    border-color: #1877F2 !important;
+    color: #1877F2 !important;
+    border-bottom: 2px solid #1877F2 !important;
+    font-weight: 600 !important;
 }
-.stTabs [data-baseweb="tab-panel"] { padding: 10px 14px 0 !important }
+.stTabs [data-baseweb="tab-panel"] { padding: 14px 0 0 !important }
 
-/* ── KPI cards ── */
-.krow { display:grid; gap:0; background:white; border:1px solid #e5e7eb;
-        border-radius:7px; overflow:hidden; margin-bottom:6px; }
+/* ── KPI cards — individual cards with gap between them ── */
+.krow { display:grid; gap:10px; background:transparent;
+        border:none; border-radius:0; margin-bottom:10px; }
 .kr4  { grid-template-columns: repeat(4,1fr); }
 .kr3  { grid-template-columns: repeat(3,1fr); }
-.kcell { padding:9px 16px 7px; border-right:1px solid #e5e7eb; position:relative; }
-.kcell:last-child { border-right:none; }
-.kcell::before { content:""; position:absolute; top:0; left:0; right:0; height:3px; }
+.kcell { padding:14px 16px 12px; background:white;
+         border:1px solid #e5e7eb; border-radius:10px;
+         position:relative; box-shadow:0 1px 4px rgba(0,0,0,0.05); }
+.kcell::before { content:""; position:absolute; top:0; left:0; right:0;
+                 height:3px; border-radius:10px 10px 0 0; }
 .c1::before{background:#1877F2} .c2::before{background:#22c55e}
 .c3::before{background:#8b5cf6} .c4::before{background:#10b981}
 .c5::before{background:#f59e0b} .c6::before{background:#ec4899}
 .c7::before{background:#06b6d4}
 .kl { font-size:0.62rem; color:#9ca3af; font-weight:600; text-transform:uppercase;
-      letter-spacing:.07em; margin-bottom:2px; }
-.kv { font-size:1.2rem; font-weight:700; color:#111827; line-height:1.15; margin-bottom:2px; }
-.kp { font-size:0.65rem; color:#10b981; font-weight:600; }
-.kn { font-size:0.65rem; color:#ef4444; font-weight:600; }
+      letter-spacing:.07em; margin-bottom:4px; }
+.kv { font-size:1.35rem; font-weight:700; color:#111827; line-height:1.15; margin-bottom:4px; }
+.kp { font-size:0.68rem; color:#10b981; font-weight:600; }
+.kn { font-size:0.68rem; color:#ef4444; font-weight:600; }
 
 /* ── Territory KPI strip ── */
 .tstrip { display:grid; grid-template-columns:repeat(5,1fr); gap:0;
@@ -217,8 +227,19 @@ with st.sidebar:
                            use_container_width=True)
 
     st.markdown("---")
-    st.markdown("Views")
-    st.caption("Use the tabs on the right →")
+    st.markdown("""
+    <div style="font-size:0.68rem;color:#4a5a80;font-weight:600;text-transform:uppercase;
+                letter-spacing:0.08em;padding:0 4px;margin-bottom:6px">Views</div>
+    """, unsafe_allow_html=True)
+
+    tab_state = st.session_state.get("active_tab_idx", 0)
+    nav_items = [("📊", "MTD Overview", 0), ("📈", "Trends", 1), ("🗺️", "By Territory", 2)]
+    for icon, label, idx in nav_items:
+        active_cls = "active" if tab_state == idx else ""
+        st.markdown(f'''
+        <div class="nav-link {active_cls}" onclick="void(0)">
+          <span class="nav-icon">{icon}</span> {label}
+        </div>''', unsafe_allow_html=True)
 
 # ── TOP BAR ───────────────────────────────────────────────────────────────────
 st.markdown(f"""
@@ -238,9 +259,8 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ── TABS ──────────────────────────────────────────────────────────────────────
-tab1, tab2, tab3 = st.tabs(["📊  Tab 1 — MTD Overview",
-                             "📈  Tab 2 — Trends",
-                             "🗺️  Tab 3 — By Territory"])
+tabs_container = st.tabs(["📊  MTD Overview", "📈  Trends", "🗺️  By Territory"])
+tab1, tab2, tab3 = tabs_container
 
 # ═════════════════════════════════════════════════════════════
 # TAB 1 — MTD OVERVIEW
