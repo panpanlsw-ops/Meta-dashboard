@@ -38,35 +38,17 @@ button[data-testid="collapsedControl"]{display:none!important}
 .tb-ls{background:white;border-radius:5px;padding:3px 8px;display:flex;align-items:center}
 
 /* Left nav panel */
-.nav-panel{background:#1a1e3c;min-height:100%;display:flex;flex-direction:column;padding:0}
-.nav-logo-area{padding:18px 14px 16px;border-bottom:1px solid rgba(255,255,255,0.08);
-  text-align:center}
-.nav-section-label{font-size:0.65rem;color:#4a5880;font-weight:700;
-  text-transform:uppercase;letter-spacing:0.1em;padding:14px 16px 6px;display:block}
-.nav-divider{border:none;border-top:1px solid rgba(255,255,255,0.08);margin:8px 0}
-
-/* Style the nav st.button elements */
-div[data-testid="stVerticalBlock"] .stButton>button{
-  background:transparent!important;
-  border:none!important;
-  color:#8a9bc0!important;
-  font-size:0.85rem!important;
-  font-weight:500!important;
-  text-align:left!important;
-  padding:9px 14px!important;
-  border-radius:7px!important;
-  width:100%!important;
-  box-shadow:none!important;
-  transition:all 0.15s!important;
+/* Nav buttons */
+[data-testid="stVerticalBlock"] .stButton > button {
+  background: transparent !important; border: none !important;
+  color: #8a9bc0 !important; font-size: 0.85rem !important;
+  font-weight: 500 !important; text-align: left !important;
+  padding: 9px 12px !important; border-radius: 7px !important;
+  width: 100% !important; box-shadow: none !important;
 }
-div[data-testid="stVerticalBlock"] .stButton>button:hover{
-  background:rgba(255,255,255,0.07)!important;
-  color:#c8d0e8!important;
+[data-testid="stVerticalBlock"] .stButton > button:hover {
+  background: rgba(255,255,255,0.08) !important; color: #dde3f5 !important;
 }
-
-/* Filter labels in nav */
-.filter-label{font-size:0.66rem;color:#4a5880;font-weight:700;
-  text-transform:uppercase;letter-spacing:0.08em;padding:0 4px 2px;display:block}
 
 /* KPI row — 7 cards, equal width, with gaps */
 .krow{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:28px}
@@ -105,7 +87,17 @@ div[data-testid="stVerticalBlock"] .stButton>button:hover{
 div[data-testid="stVerticalBlock"]>div{gap:0!important}
 .element-container{margin-bottom:0!important}
 .stPlotlyChart{margin:0!important;padding:0!important}
-div[data-testid="column"]{padding:0 5px!important}
+/* Nav column dark background */
+div[data-testid="column"]:first-child {
+  background:#1a1e3c !important;
+  padding:14px 8px 20px !important;
+  min-height:calc(100vh - 50px);
+}
+/* Content column light background */
+div[data-testid="column"]:last-child {
+  background:#f4f6fb !important;
+  padding:0 20px 20px !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -174,22 +166,6 @@ nav_col, content_col = st.columns([1, 5])
 # ════════════════════════════════════════════════
 with nav_col:
     # Logo
-    st.markdown(f"""
-    <div class="nav-panel">
-      <div class="nav-logo-area">
-        <img src="data:image/png;base64,{LS_B64}" height="38"
-             style="object-fit:contain;display:block;margin:0 auto 10px">
-        <div style="display:inline-flex;align-items:center;gap:6px;
-                    background:rgba(255,255,255,0.08);border-radius:6px;
-                    padding:5px 14px">
-          {META_SVG}
-          <span style="color:white;font-size:0.82rem;font-weight:600">Meta Ads</span>
-        </div>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("<div style='background:#1a1e3c;padding:10px 0 0'>", unsafe_allow_html=True)
 
     # VIEWS section
     st.markdown(
@@ -248,7 +224,6 @@ with nav_col:
                                    min_value=mn, max_value=mx,
                                    label_visibility="collapsed")
 
-    st.markdown("</div>", unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════
 # MAIN CONTENT
