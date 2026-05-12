@@ -38,9 +38,14 @@ button[data-testid="collapsedControl"] { display:none!important }
     max-width: 100% !important;
 }
 
-/* Sidebar dark theme */
+/* Sidebar dark theme — force always open */
 [data-testid="stSidebar"] {
     background-color: #1a1e3c !important;
+    min-width: 220px !important;
+    max-width: 220px !important;
+}
+[data-testid="stSidebar"] > div:first-child {
+    padding-top: 0 !important;
 }
 [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
     color: #6b7db0 !important;
@@ -93,12 +98,12 @@ button[data-testid="collapsedControl"] { display:none!important }
 [data-testid="stSidebar"] .stRadio input { display:none !important; }
 
 /* KPI cards with gap */
-.krow { display:grid; gap:12px; margin-bottom:12px; }
-.kr4  { grid-template-columns:repeat(4,1fr); }
-.kr3  { grid-template-columns:repeat(3,1fr); }
+.krow { display:grid; gap:10px; margin-bottom:16px; }
+.kr4  { grid-template-columns:repeat(4,minmax(0,280px)); }
+.kr3  { grid-template-columns:repeat(3,minmax(0,280px)); }
 .kcell {
     background:white; border:1px solid #e5e7eb; border-radius:10px;
-    padding:14px 18px 12px; position:relative;
+    padding:10px 14px 9px; position:relative;
     box-shadow:0 1px 4px rgba(0,0,0,0.05);
 }
 .kcell::before {
@@ -109,11 +114,11 @@ button[data-testid="collapsedControl"] { display:none!important }
 .c3::before{background:#8b5cf6} .c4::before{background:#10b981}
 .c5::before{background:#f59e0b} .c6::before{background:#ec4899}
 .c7::before{background:#06b6d4}
-.kl { font-size:0.62rem; color:#9ca3af; font-weight:600;
-      text-transform:uppercase; letter-spacing:.07em; margin-bottom:5px; }
-.kv { font-size:1.4rem; font-weight:700; color:#111827; line-height:1.1; margin-bottom:5px; }
-.kp { font-size:0.68rem; color:#10b981; font-weight:600; }
-.kn { font-size:0.68rem; color:#ef4444; font-weight:600; }
+.kl { font-size:0.6rem; color:#9ca3af; font-weight:600;
+      text-transform:uppercase; letter-spacing:.07em; margin-bottom:3px; }
+.kv { font-size:1.05rem; font-weight:700; color:#111827; line-height:1.1; margin-bottom:3px; }
+.kp { font-size:0.65rem; color:#10b981; font-weight:600; }
+.kn { font-size:0.65rem; color:#ef4444; font-weight:600; }
 
 /* Territory strip */
 .tstrip { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:12px; }
@@ -128,9 +133,9 @@ button[data-testid="collapsedControl"] { display:none!important }
 /* Section cards */
 .sh { background:#1877F2; color:white; padding:6px 14px;
       border-radius:8px 8px 0 0; font-weight:600; font-size:0.78rem;
-      display:flex; align-items:center; gap:5px; }
+      display:flex; align-items:center; gap:5px; margin-top:16px; }
 .sb { background:white; border:1px solid #e5e7eb; border-top:none;
-      border-radius:0 0 8px 8px; padding:10px; margin-bottom:10px; }
+      border-radius:0 0 8px 8px; padding:12px; margin-bottom:0px; }
 
 /* Tighten Streamlit gaps */
 div[data-testid="stVerticalBlock"] > div { gap:0 !important; }
