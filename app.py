@@ -20,143 +20,161 @@ c1.4 0 2.6-.8 4.2-3.4-1.6-2.8-2.8-4.6-4.2-4.6zm11.4 0c-1.4 0-2.6 1.8-4.2 4.6
 
 st.markdown("""
 <style>
-/* ── Reset chrome ── */
+/* ── Reset ── */
 #MainMenu, footer { display:none!important }
 header[data-testid="stHeader"] { display:none!important }
-.block-container { padding: 0 !important; max-width: 100% !important }
+.block-container { padding:0!important; max-width:100%!important }
 
-/* ── Sidebar dark theme ── */
-section[data-testid="stSidebar"] {
-    background: #1a1e3c !important;
-    min-width: 220px !important;
-    max-width: 220px !important;
+/* ── Sidebar ── */
+section[data-testid="stSidebar"] > div:first-child {
+    background: #1a1e3c;
+    padding: 0;
 }
+section[data-testid="stSidebar"] {
+    min-width: 210px !important;
+    max-width: 210px !important;
+}
+
+/* Hide default radio button circles and labels wrapper */
+section[data-testid="stSidebar"] .stRadio > label { display:none!important }
+section[data-testid="stSidebar"] .stRadio > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+/* Each radio option → styled as a nav button */
+section[data-testid="stSidebar"] .stRadio > div > label {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 7px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: #8a9bc0 !important;
+    background: transparent;
+    transition: all 0.15s;
+    margin: 0 6px;
+}
+section[data-testid="stSidebar"] .stRadio > div > label:hover {
+    background: rgba(255,255,255,0.06);
+    color: #c8d0e8 !important;
+}
+section[data-testid="stSidebar"] .stRadio > div > label[data-checked="true"] {
+    background: #1877F2 !important;
+    color: white !important;
+}
+/* Hide the actual radio circle dot */
+section[data-testid="stSidebar"] .stRadio input[type="radio"] { display:none!important }
+section[data-testid="stSidebar"] .stRadio div[data-testid="stMarkdownContainer"] p {
+    color: inherit !important;
+    font-size: inherit !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+}
+
+/* Sidebar text & inputs */
 section[data-testid="stSidebar"] * { color: #c8d0e8 !important }
 section[data-testid="stSidebar"] .stSelectbox > label,
 section[data-testid="stSidebar"] .stDateInput > label,
-section[data-testid="stSidebar"] .stFileUploader > label { 
-    font-size: 0.7rem !important; color: #6b7db0 !important;
-    text-transform: uppercase; letter-spacing: 0.06em;
+section[data-testid="stSidebar"] .stFileUploader > label {
+    font-size: 0.68rem !important; color: #6b7db0 !important;
+    text-transform: uppercase; letter-spacing: 0.07em;
 }
-section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.1) !important }
-section[data-testid="stSidebar"] p { color: #6b7db0 !important; font-size: 0.68rem !important;
-    text-transform: uppercase; letter-spacing: 0.08em; }
+section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.1)!important }
 
 /* ── Top bar ── */
 .topbar {
-    background: #1877F2; height: 44px;
-    display: flex; align-items: center; padding: 0 16px; gap: 0;
+    background: #1877F2; height: 46px;
+    display: flex; align-items: center; padding: 0 20px;
     position: sticky; top: 0; z-index: 999;
 }
 .tb-brand { display:flex; align-items:center; gap:6px; }
 .tb-name  { color:white; font-weight:700; font-size:0.9rem; }
 .tb-sep   { width:1px; height:22px; background:rgba(255,255,255,0.3); margin:0 14px; }
-.tb-title { color:white; font-size:0.82rem; font-weight:600; }
-.tb-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
-.tb-date  { color:rgba(255,255,255,0.8); font-size:0.75rem; }
-.tb-ls    { background:white; border-radius:4px; padding:2px 7px; display:flex; align-items:center; }
+.tb-title { color:white; font-size:0.85rem; font-weight:600; }
+.tb-right { margin-left:auto; display:flex; align-items:center; gap:12px; }
+.tb-date  { color:rgba(255,255,255,0.8); font-size:0.78rem; }
+.tb-ls    { background:white; border-radius:5px; padding:3px 8px; display:flex; align-items:center; }
 
-/* ── Sidebar nav links — Views section ── */
-.nav-link {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px 12px; border-radius: 6px; margin-bottom: 2px;
-    font-size: 0.82rem; font-weight: 500; cursor: pointer;
-    color: #8a9bc0; text-decoration: none;
-    transition: background 0.15s;
-}
-.nav-link:hover { background: rgba(255,255,255,0.06); color: #c8d0e8; }
-.nav-link.active { background: #1877F2; color: white; }
-.nav-icon { font-size: 1rem; width: 18px; text-align: center; }
+/* ── Page padding ── */
+.page { padding: 16px 20px; }
 
-/* ── Tab bar — hidden labels, top horizontal strip ── */
-.stTabs [data-baseweb="tab-list"] {
-    gap: 0; background: #f4f6fb;
-    border-bottom: 2px solid #e5e7eb;
-    padding: 0 16px;
-}
-.stTabs [data-baseweb="tab"] {
-    height: 38px; padding: 0 20px;
-    font-size: 0.8rem; font-weight: 500;
-    background: transparent; border: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px; color: #6b7280;
-    border-radius: 0;
-}
-.stTabs [aria-selected="true"] {
-    color: #1877F2 !important;
-    border-bottom: 2px solid #1877F2 !important;
-    font-weight: 600 !important;
-}
-.stTabs [data-baseweb="tab-panel"] { padding: 14px 0 0 !important }
-
-/* ── KPI cards — individual cards with gap between them ── */
-.krow { display:grid; gap:10px; background:transparent;
-        border:none; border-radius:0; margin-bottom:10px; }
+/* ── KPI cards — individual cards with gap ── */
+.krow { display:grid; gap:12px; margin-bottom:12px; }
 .kr4  { grid-template-columns: repeat(4,1fr); }
 .kr3  { grid-template-columns: repeat(3,1fr); }
-.kcell { padding:14px 16px 12px; background:white;
-         border:1px solid #e5e7eb; border-radius:10px;
-         position:relative; box-shadow:0 1px 4px rgba(0,0,0,0.05); }
-.kcell::before { content:""; position:absolute; top:0; left:0; right:0;
-                 height:3px; border-radius:10px 10px 0 0; }
+.kcell {
+    background: white; border:1px solid #e5e7eb; border-radius:10px;
+    padding: 14px 16px 12px; position:relative;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.kcell::before {
+    content:""; position:absolute; top:0; left:0; right:0;
+    height:3px; border-radius:10px 10px 0 0;
+}
 .c1::before{background:#1877F2} .c2::before{background:#22c55e}
 .c3::before{background:#8b5cf6} .c4::before{background:#10b981}
 .c5::before{background:#f59e0b} .c6::before{background:#ec4899}
 .c7::before{background:#06b6d4}
-.kl { font-size:0.62rem; color:#9ca3af; font-weight:600; text-transform:uppercase;
-      letter-spacing:.07em; margin-bottom:4px; }
-.kv { font-size:1.35rem; font-weight:700; color:#111827; line-height:1.15; margin-bottom:4px; }
+.kl { font-size:0.62rem; color:#9ca3af; font-weight:600;
+      text-transform:uppercase; letter-spacing:.07em; margin-bottom:4px; }
+.kv { font-size:1.4rem; font-weight:700; color:#111827; line-height:1.1; margin-bottom:4px; }
 .kp { font-size:0.68rem; color:#10b981; font-weight:600; }
 .kn { font-size:0.68rem; color:#ef4444; font-weight:600; }
 
 /* ── Territory KPI strip ── */
-.tstrip { display:grid; grid-template-columns:repeat(5,1fr); gap:0;
-          background:white; border:1px solid #e5e7eb; border-radius:7px;
-          overflow:hidden; margin-bottom:8px; }
-.tcell  { padding:10px 12px 8px; border-right:1px solid #e5e7eb; text-align:center; }
-.tcell:last-child { border-right:none; }
-.ttop { display:block; height:3px; margin-bottom:6px; }
-.tl   { font-size:0.62rem; color:#9ca3af; font-weight:600; text-transform:uppercase;
-        letter-spacing:.06em; margin-bottom:4px; }
+.tstrip { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:12px; }
+.tcell  { background:white; border:1px solid #e5e7eb; border-radius:10px;
+          padding:12px 14px 10px; text-align:center;
+          box-shadow:0 1px 4px rgba(0,0,0,0.05); }
+.ttop { display:block; height:3px; border-radius:3px; margin-bottom:8px; }
+.tl   { font-size:0.62rem; color:#9ca3af; font-weight:600;
+        text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
 .tv   { font-size:1.1rem; font-weight:700; color:#111827; }
 
-/* ── Section cards ── */
-.sh { background:#1877F2; color:white; padding:6px 12px; border-radius:6px 6px 0 0;
-      font-weight:600; font-size:0.78rem; display:flex; align-items:center; gap:5px; }
+/* ── Section header + body ── */
+.sh { background:#1877F2; color:white; padding:6px 14px;
+      border-radius:8px 8px 0 0; font-weight:600; font-size:0.78rem;
+      display:flex; align-items:center; gap:5px; }
 .sb { background:white; border:1px solid #e5e7eb; border-top:none;
-      border-radius:0 0 6px 6px; padding:10px; margin-bottom:8px; }
+      border-radius:0 0 8px 8px; padding:10px; margin-bottom:10px; }
 
-/* ── Campaign pills ── */
-div[data-testid="stHorizontalBlock"] > div { padding: 0 2px !important; }
+/* ── Section label ── */
+.sidebar-section {
+    font-size:0.65rem; color:#4a5a80; font-weight:600;
+    text-transform:uppercase; letter-spacing:0.09em;
+    padding: 10px 14px 4px;
+}
 
-/* ── Tighten spacing ── */
-div[data-testid="stVerticalBlock"] > div { gap: 0 !important; }
-.element-container { margin-bottom: 0 !important; }
-.stPlotlyChart { margin:0 !important; padding:0 !important; }
+/* Tighten streamlit gaps */
+div[data-testid="stVerticalBlock"] > div { gap:0!important }
+.element-container { margin-bottom:0!important }
+.stPlotlyChart { margin:0!important; padding:0!important }
+div[data-testid="column"] { padding: 0 4px!important }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Helpers ─────────────────────────────────────────────────────────────────
+# ── Helpers ────────────────────────────────────────────────────────────────
 COLORS = ["#1877F2","#10b981","#f59e0b","#8b5cf6","#ef4444",
           "#06b6d4","#f97316","#ec4899","#22c55e","#a78bfa","#fb923c","#34d399"]
 
 def fn(n):
     if pd.isna(n): return "—"
-    if abs(n) >= 1_000_000: return f"{n/1e6:.1f}M"
-    if abs(n) >= 1_000: return f"{n/1e3:.1f}K"
+    if abs(n)>=1_000_000: return f"{n/1e6:.1f}M"
+    if abs(n)>=1_000: return f"{n/1e3:.1f}K"
     return f"{n:,.0f}"
-
 def fc(n):
-    if pd.isna(n) or n == 0: return "$0"
-    if abs(n) >= 1_000_000: return f"${n/1e6:.1f}M"
-    if abs(n) >= 1_000: return f"${n/1e3:.1f}K"
+    if pd.isna(n) or n==0: return "$0"
+    if abs(n)>=1_000_000: return f"${n/1e6:.1f}M"
+    if abs(n)>=1_000: return f"${n/1e3:.1f}K"
     return f"${n:,.0f}"
-
 def dlt(v, pg=True):
     if pd.isna(v): return ""
-    arrow = "▲" if v > 0 else "▼"
-    cls = ("kp" if v > 0 else "kn") if pg else ("kn" if v > 0 else "kp")
-    return f'<span class="{cls}">{arrow} {abs(v):.1f}% vs last month</span>'
+    a = "▲" if v>0 else "▼"
+    c = ("kp" if v>0 else "kn") if pg else ("kn" if v>0 else "kp")
+    return f'<span class="{c}">{a} {abs(v):.1f}% vs last month</span>'
 
 @st.cache_data
 def load_data(f):
@@ -168,35 +186,35 @@ def ch(h=200):
                 paper_bgcolor="white", plot_bgcolor="white",
                 xaxis=dict(showgrid=False, tickformat="%b %d"),
                 yaxis=dict(showgrid=True, gridcolor="#f3f4f6"),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02,
-                            xanchor="right", x=1),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                 hovermode="x unified")
 
-# ── Session state ────────────────────────────────────────────────────────────
-if "t1c" not in st.session_state: st.session_state.t1c = "All Campaigns"
+# ── Session state ──────────────────────────────────────────────────────────
+if "t1c"  not in st.session_state: st.session_state.t1c  = "All Campaigns"
 if "gran" not in st.session_state: st.session_state.gran = "Daily"
 
-# ── Load data ────────────────────────────────────────────────────────────────
+# ── Load data ──────────────────────────────────────────────────────────────
 try:    data = load_data("meta_ads_data.xlsx")
 except: data = {}
 
-# ── SIDEBAR ──────────────────────────────────────────────────────────────────
+# ── SIDEBAR ────────────────────────────────────────────────────────────────
 with st.sidebar:
+    # Logo block
     st.markdown(f"""
-    <div style="padding:14px 0 12px;border-bottom:1px solid rgba(255,255,255,0.1);
+    <div style="padding:16px 14px 14px;border-bottom:1px solid rgba(255,255,255,0.08);
                 display:flex;flex-direction:column;align-items:center;gap:8px">
-      <img src="data:image/png;base64,{LS_B64}" height="32" style="object-fit:contain">
-      <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);
-                  border-radius:6px;padding:4px 10px">
+      <img src="data:image/png;base64,{LS_B64}" height="34"
+           style="object-fit:contain;filter:brightness(1.1)">
+      <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.07);
+                  border-radius:6px;padding:4px 12px">
         {META_ICON}
         <span style="color:white;font-size:0.8rem;font-weight:600">Meta Ads</span>
       </div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-    st.markdown("Filters")
-    st.markdown("<div style='height:2px'></div>", unsafe_allow_html=True)
+    # FILTERS section
+    st.markdown('<div class="sidebar-section">Filters</div>', unsafe_allow_html=True)
 
     camp_list = ["All Campaigns"]
     if "Campaign Performance" in data:
@@ -213,11 +231,21 @@ with st.sidebar:
         dr = data["Daily Performance"].copy()
         dr["Date"] = pd.to_datetime(dr["Date"])
         mn, mx = dr["Date"].min().date(), dr["Date"].max().date()
-        date_range = st.date_input("Date range", value=(mn, mx),
-                                   min_value=mn, max_value=mx)
+        date_range = st.date_input("Date range", value=(mn, mx), min_value=mn, max_value=mx)
 
-    st.markdown("---")
-    up = st.file_uploader("Upload Excel", type=["xlsx", "xls"])
+    st.markdown("<hr>", unsafe_allow_html=True)
+
+    # VIEWS nav — using radio styled as nav buttons
+    st.markdown('<div class="sidebar-section">Views</div>', unsafe_allow_html=True)
+    page = st.radio(
+        "nav",
+        ["📊  MTD Overview", "📈  Trends", "🗺️  By Territory"],
+        label_visibility="collapsed"
+    )
+
+    st.markdown("<hr>", unsafe_allow_html=True)
+
+    up = st.file_uploader("Upload Excel", type=["xlsx","xls"])
     if up:
         data = load_data(up); st.rerun()
 
@@ -226,29 +254,19 @@ with st.sidebar:
         st.download_button("⬇ Export CSV", csv, "meta_data.csv", "text/csv",
                            use_container_width=True)
 
-    st.markdown("---")
-    st.markdown("""
-    <div style="font-size:0.68rem;color:#4a5a80;font-weight:600;text-transform:uppercase;
-                letter-spacing:0.08em;padding:0 4px;margin-bottom:6px">Views</div>
-    """, unsafe_allow_html=True)
-
-    tab_state = st.session_state.get("active_tab_idx", 0)
-    nav_items = [("📊", "MTD Overview", 0), ("📈", "Trends", 1), ("🗺️", "By Territory", 2)]
-    for icon, label, idx in nav_items:
-        active_cls = "active" if tab_state == idx else ""
-        st.markdown(f'''
-        <div class="nav-link {active_cls}" onclick="void(0)">
-          <span class="nav-icon">{icon}</span> {label}
-        </div>''', unsafe_allow_html=True)
-
-# ── TOP BAR ───────────────────────────────────────────────────────────────────
+# ── TOP BAR ────────────────────────────────────────────────────────────────
+title_map = {
+    "📊  MTD Overview":  "MTD Overview",
+    "📈  Trends":        "Trends",
+    "🗺️  By Territory":  "By Territory",
+}
 st.markdown(f"""
 <div class="topbar">
   <div class="tb-brand">{META_ICON}
     <span class="tb-name">Meta Ads</span>
   </div>
   <div class="tb-sep"></div>
-  <span class="tb-title">Dashboard</span>
+  <span class="tb-title">{title_map[page]}</span>
   <div class="tb-right">
     <span class="tb-date">Dec 2024</span>
     <div class="tb-ls">
@@ -258,21 +276,20 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ── TABS ──────────────────────────────────────────────────────────────────────
-tabs_container = st.tabs(["📊  MTD Overview", "📈  Trends", "🗺️  By Territory"])
-tab1, tab2, tab3 = tabs_container
+st.markdown("<div class='page'>", unsafe_allow_html=True)
 
-# ═════════════════════════════════════════════════════════════
-# TAB 1 — MTD OVERVIEW
-# ═════════════════════════════════════════════════════════════
-with tab1:
+# ══════════════════════════════════════════════════════════════════
+# PAGE 1 — MTD OVERVIEW
+# ══════════════════════════════════════════════════════════════════
+if page == "📊  MTD Overview":
 
     if "Overview" in data:
         ov = data["Overview"].set_index("Metric")
 
         def kc(m, cls, cur=False, pg=True):
             if m not in ov.index:
-                return f'<div class="kcell {cls}"><div class="kl">{m}</div><div class="kv">—</div></div>'
+                return (f'<div class="kcell {cls}"><div class="kl">{m}</div>'
+                        f'<div class="kv">—</div></div>')
             r = ov.loc[m]
             v = fc(r["Current Period"]) if cur else fn(r["Current Period"])
             return (f'<div class="kcell {cls}"><div class="kl">{m}</div>'
@@ -281,10 +298,10 @@ with tab1:
         # Row 1: Spend · Sales Amount · Clicks · Conversions
         st.markdown(
             '<div class="krow kr4">' +
-            kc("Spend ($)",        "c1", True, False) +
-            kc("Sales Amount ($)", "c2", True, True)  +
-            kc("Clicks",           "c3", False, True) +
-            kc("Conversions",      "c4", False, True) +
+            kc("Spend ($)",        "c1", True,  False) +
+            kc("Sales Amount ($)", "c2", True,  True)  +
+            kc("Clicks",           "c3", False, True)  +
+            kc("Conversions",      "c4", False, True)  +
             '</div>', unsafe_allow_html=True)
 
         # Row 2: CRM Leads · Appointments · Customers
@@ -295,28 +312,27 @@ with tab1:
             kc("Customers",    "c7", False, True) +
             '</div>', unsafe_allow_html=True)
 
-    st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-
     if "Campaign Performance" in data:
         camp_df = data["Campaign Performance"].copy()
         opts = ["All Campaigns"] + list(camp_df["Campaign Objective"].unique())
 
-        st.markdown("<div style='font-size:0.75rem;color:#6b7280;margin-bottom:4px'>Select campaign to drill down:</div>",
+        st.markdown("<p style='font-size:0.75rem;color:#6b7280;margin:4px 0'>Select campaign to drill down:</p>",
                     unsafe_allow_html=True)
         bc = st.columns(len(opts))
         for i, lb in enumerate(opts):
             if bc[i].button(lb, key=f"cp{i}", use_container_width=True,
-                            type="primary" if st.session_state.t1c == lb else "secondary"):
+                            type="primary" if st.session_state.t1c==lb else "secondary"):
                 st.session_state.t1c = lb; st.rerun()
 
         sel = st.session_state.t1c
-        fd  = camp_df if sel == "All Campaigns" else camp_df[camp_df["Campaign Objective"] == sel]
+        fd  = camp_df if sel=="All Campaigns" else camp_df[camp_df["Campaign Objective"]==sel]
 
-        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
-
+        st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
+
         with col1:
-            st.markdown('<div class="sh">💸 Spend by Campaign</div><div class="sb">', unsafe_allow_html=True)
+            st.markdown('<div class="sh">💸 Spend by Campaign</div><div class="sb">',
+                        unsafe_allow_html=True)
             fig = px.pie(camp_df, values="Spend ($)", names="Campaign Objective",
                          hole=0.42, color_discrete_sequence=COLORS)
             fig.update_traces(textposition="inside", textinfo="percent",
@@ -327,8 +343,9 @@ with tab1:
             st.markdown("</div>", unsafe_allow_html=True)
 
         with col2:
-            st.markdown('<div class="sh">👥 CRM Leads by Campaign</div><div class="sb">', unsafe_allow_html=True)
-            ld = camp_df[camp_df["CRM Leads"] > 0].sort_values("CRM Leads")
+            st.markdown('<div class="sh">👥 CRM Leads by Campaign</div><div class="sb">',
+                        unsafe_allow_html=True)
+            ld = camp_df[camp_df["CRM Leads"]>0].sort_values("CRM Leads")
             f2 = px.bar(ld, x="CRM Leads", y="Campaign Objective", orientation="h",
                         color="Campaign Objective", color_discrete_sequence=COLORS, text="CRM Leads")
             f2.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
@@ -340,8 +357,9 @@ with tab1:
             st.markdown("</div>", unsafe_allow_html=True)
 
         with col3:
-            st.markdown('<div class="sh">💰 Sales by Campaign</div><div class="sb">', unsafe_allow_html=True)
-            sd = camp_df[camp_df["Sales Amount ($)"] > 0].sort_values("Sales Amount ($)")
+            st.markdown('<div class="sh">💰 Sales by Campaign</div><div class="sb">',
+                        unsafe_allow_html=True)
+            sd = camp_df[camp_df["Sales Amount ($)"]>0].sort_values("Sales Amount ($)")
             f3 = px.bar(sd, x="Sales Amount ($)", y="Campaign Objective", orientation="h",
                         color="Campaign Objective", color_discrete_sequence=COLORS,
                         text="Sales Amount ($)")
@@ -361,30 +379,30 @@ with tab1:
         tb["Spend ($)"]        = tb["Spend ($)"].apply(fc)
         tb["Impressions"]      = tb["Impressions"].apply(fn)
         tb["Clicks"]           = tb["Clicks"].apply(fn)
-        tb["CRM Leads"]        = tb["CRM Leads"].apply(lambda x: fn(x) if x > 0 else "—")
-        tb["Conversions"]      = tb["Conversions"].apply(lambda x: fn(x) if x > 0 else "—")
+        tb["CRM Leads"]        = tb["CRM Leads"].apply(lambda x: fn(x) if x>0 else "—")
+        tb["Conversions"]      = tb["Conversions"].apply(lambda x: fn(x) if x>0 else "—")
         tb["Appointments"]     = tb["Appointments"].apply(fn)
-        tb["Customers"]        = tb["Customers"].apply(lambda x: fn(x) if x > 0 else "—")
-        tb["Sales Amount ($)"] = tb["Sales Amount ($)"].apply(lambda x: fc(x) if x > 0 else "—")
-        tb["ROAS"]             = tb["ROAS"].apply(lambda x: f"{x:.1f}x" if x > 0 else "—")
+        tb["Customers"]        = tb["Customers"].apply(lambda x: fn(x) if x>0 else "—")
+        tb["Sales Amount ($)"] = tb["Sales Amount ($)"].apply(lambda x: fc(x) if x>0 else "—")
+        tb["ROAS"]             = tb["ROAS"].apply(lambda x: f"{x:.1f}x" if x>0 else "—")
         st.dataframe(tb, use_container_width=True, hide_index=True, height=160)
         st.markdown("</div>", unsafe_allow_html=True)
 
-# ═════════════════════════════════════════════════════════════
-# TAB 2 — TRENDS
-# ═════════════════════════════════════════════════════════════
-with tab2:
+# ══════════════════════════════════════════════════════════════════
+# PAGE 2 — TRENDS
+# ══════════════════════════════════════════════════════════════════
+elif page == "📈  Trends":
 
     if "Daily Performance" not in data:
         st.warning("No Daily Performance sheet found."); st.stop()
 
     daily = data["Daily Performance"].copy()
     daily["Date"] = pd.to_datetime(daily["Date"])
-    if date_range and len(date_range) == 2:
-        daily = daily[(daily["Date"] >= pd.Timestamp(date_range[0])) &
-                      (daily["Date"] <= pd.Timestamp(date_range[1]))]
+    if date_range and len(date_range)==2:
+        daily = daily[(daily["Date"]>=pd.Timestamp(date_range[0])) &
+                      (daily["Date"]<=pd.Timestamp(date_range[1]))]
     if sel_camp != "All Campaigns" and "Campaign" in daily.columns:
-        daily = daily[daily["Campaign"] == sel_camp]
+        daily = daily[daily["Campaign"]==sel_camp]
 
     agg = daily.groupby("Date").agg({
         "Spend ($)":"sum","Impressions":"sum","Reach":"sum","Clicks":"sum",
@@ -392,34 +410,36 @@ with tab2:
         "Customers":"sum","Sales Amount ($)":"sum","ROAS":"mean"
     }).reset_index()
 
-    # Granularity + metric toggles in one bar
-    ctrl = st.columns([0.8, 0.8, 0.9, 0.15, 1,1,1,1,1,1,1,1])
+    # Granularity buttons + metric checkboxes in one row
+    ctrl = st.columns([0.8,0.8,0.9,0.2,1,1,1,1,1,1,1,1])
     if ctrl[0].button("Daily",   key="gd", use_container_width=True,
                       type="primary" if st.session_state.gran=="Daily"   else "secondary"):
-        st.session_state.gran="Daily"; st.rerun()
+        st.session_state.gran="Daily";   st.rerun()
     if ctrl[1].button("Weekly",  key="gw", use_container_width=True,
                       type="primary" if st.session_state.gran=="Weekly"  else "secondary"):
-        st.session_state.gran="Weekly"; st.rerun()
+        st.session_state.gran="Weekly";  st.rerun()
     if ctrl[2].button("Monthly", key="gm", use_container_width=True,
                       type="primary" if st.session_state.gran=="Monthly" else "secondary"):
         st.session_state.gran="Monthly"; st.rerun()
 
-    if st.session_state.gran == "Weekly":  agg = agg.resample("W",  on="Date").sum().reset_index()
-    if st.session_state.gran == "Monthly": agg = agg.resample("ME", on="Date").sum().reset_index()
+    if st.session_state.gran=="Weekly":  agg = agg.resample("W",  on="Date").sum().reset_index()
+    if st.session_state.gran=="Monthly": agg = agg.resample("ME", on="Date").sum().reset_index()
 
-    mopts  = ["Spend ($)","Sales Amount ($)","CRM Leads","Clicks","Conversions","Appointments","Customers","ROAS"]
-    mshort = ["Spend","Sales","Leads","Clicks","Conv.","Appt.","Customers","ROAS"]
+    mopts  = ["Spend ($)","Sales Amount ($)","CRM Leads","Clicks",
+              "Conversions","Appointments","Customers","ROAS"]
+    mshort = ["Spend","Sales","Leads","Clicks","Conv.","Appt.","Cust.","ROAS"]
     mdefs  = [True,True,True,False,False,False,False,False]
     sel_m  = [m for i,(m,s,d) in enumerate(zip(mopts,mshort,mdefs))
               if ctrl[i+4].checkbox(s, value=d, key=f"mx{i}")]
 
     if sel_m:
-        st.markdown('<div class="sh">📈 Metrics Over Time</div><div class="sb">', unsafe_allow_html=True)
+        st.markdown('<div class="sh">📈 Metrics Over Time</div><div class="sb">',
+                    unsafe_allow_html=True)
         fm = go.Figure()
         for m, col in zip(sel_m, COLORS):
             if m not in agg.columns: continue
-            fm.add_trace(go.Scatter(x=agg["Date"], y=agg[m], name=m, mode="lines+markers",
-                line=dict(color=col, width=2), marker=dict(size=3),
+            fm.add_trace(go.Scatter(x=agg["Date"], y=agg[m], name=m,
+                mode="lines+markers", line=dict(color=col, width=2), marker=dict(size=3),
                 hovertemplate=f"<b>%{{x|%b %d}}</b><br>{m}: %{{y:,.1f}}<extra></extra>"))
         fm.update_layout(**ch(220))
         st.plotly_chart(fm, use_container_width=True)
@@ -429,7 +449,8 @@ with tab2:
 
     r1, r2 = st.columns(2)
     with r1:
-        st.markdown('<div class="sh">💹 ROAS Trend</div><div class="sb">', unsafe_allow_html=True)
+        st.markdown('<div class="sh">💹 ROAS Trend</div><div class="sb">',
+                    unsafe_allow_html=True)
         fr = go.Figure(go.Scatter(x=agg["Date"], y=agg["ROAS"], mode="lines+markers",
             line=dict(color="#22c55e", width=2), fill="tozeroy",
             fillcolor="rgba(34,197,94,0.07)",
@@ -440,9 +461,9 @@ with tab2:
             yaxis=dict(showgrid=True, gridcolor="#f3f4f6", ticksuffix="x"))
         st.plotly_chart(fr, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
-
     with r2:
-        st.markdown('<div class="sh">💸 Spend vs Sales Amount</div><div class="sb">', unsafe_allow_html=True)
+        st.markdown('<div class="sh">💸 Spend vs Sales Amount</div><div class="sb">',
+                    unsafe_allow_html=True)
         fsv = make_subplots(specs=[[{"secondary_y": True}]])
         fsv.add_trace(go.Bar(x=agg["Date"], y=agg["Spend ($)"], name="Spend",
             marker_color="rgba(24,119,242,0.65)",
@@ -461,7 +482,8 @@ with tab2:
 
     r3, r4 = st.columns(2)
     with r3:
-        st.markdown('<div class="sh">📡 Impressions & Reach</div><div class="sb">', unsafe_allow_html=True)
+        st.markdown('<div class="sh">📡 Impressions & Reach</div><div class="sb">',
+                    unsafe_allow_html=True)
         fa = go.Figure()
         fa.add_trace(go.Scatter(x=agg["Date"], y=agg["Impressions"], name="Impressions",
                                 line=dict(color="#1877F2", width=2)))
@@ -470,29 +492,30 @@ with tab2:
         fa.update_layout(**ch(175))
         st.plotly_chart(fa, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
-
     with r4:
-        st.markdown('<div class="sh">🎯 Conversion Funnel Trend</div><div class="sb">', unsafe_allow_html=True)
+        st.markdown('<div class="sh">🎯 Conversion Funnel Trend</div><div class="sb">',
+                    unsafe_allow_html=True)
         fcv = go.Figure()
-        for m, col in [("Conversions","#10b981"),("Appointments","#06b6d4"),("Customers","#ec4899")]:
+        for m, col in [("Conversions","#10b981"),("Appointments","#06b6d4"),
+                       ("Customers","#ec4899")]:
             fcv.add_trace(go.Scatter(x=agg["Date"], y=agg[m], name=m,
                                      line=dict(color=col, width=2)))
         fcv.update_layout(**ch(175))
         st.plotly_chart(fcv, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-# ═════════════════════════════════════════════════════════════
-# TAB 3 — BY TERRITORY
-# ═════════════════════════════════════════════════════════════
-with tab3:
+# ══════════════════════════════════════════════════════════════════
+# PAGE 3 — BY TERRITORY
+# ══════════════════════════════════════════════════════════════════
+elif page == "🗺️  By Territory":
 
     if "Territory Performance" not in data:
         st.warning("No Territory Performance sheet found."); st.stop()
 
     raw = data["Territory Performance"].copy()
-    t3_camps = ["All Campaigns"] + sorted(raw["Campaign"].unique().tolist())
-    s3 = st.selectbox("Campaign", t3_camps, key="t3c", label_visibility="collapsed")
-    tdf = raw if s3 == "All Campaigns" else raw[raw["Campaign"] == s3]
+    t3c_list = ["All Campaigns"] + sorted(raw["Campaign"].unique().tolist())
+    s3  = st.selectbox("Campaign", t3c_list, key="t3c", label_visibility="collapsed")
+    tdf = raw if s3=="All Campaigns" else raw[raw["Campaign"]==s3]
 
     terr = tdf.groupby("Territory").agg({
         "Unique Leads":"sum","New Leads":"sum","Appointments":"sum","Quote":"sum",
@@ -528,7 +551,8 @@ with tab3:
 
     d1, d2 = st.columns(2)
     with d1:
-        st.markdown('<div class="sh">🥧 Leads % of Total</div><div class="sb">', unsafe_allow_html=True)
+        st.markdown('<div class="sh">🥧 Leads % of Total</div><div class="sb">',
+                    unsafe_allow_html=True)
         fl = px.pie(terr, values="Unique Leads", names="Territory",
                     hole=0.42, color_discrete_sequence=COLORS)
         fl.update_traces(textposition="inside", textinfo="percent",
@@ -537,9 +561,9 @@ with tab3:
                          paper_bgcolor="white", legend=dict(font=dict(size=9)))
         st.plotly_chart(fl, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
-
     with d2:
-        st.markdown('<div class="sh">💰 Sales Amount % of Total</div><div class="sb">', unsafe_allow_html=True)
+        st.markdown('<div class="sh">💰 Sales Amount % of Total</div><div class="sb">',
+                    unsafe_allow_html=True)
         fs = px.pie(terr[terr["Sales Amount ($)"]>0], values="Sales Amount ($)",
                     names="Territory", hole=0.42, color_discrete_sequence=COLORS)
         fs.update_traces(textposition="inside", textinfo="percent",
@@ -551,15 +575,16 @@ with tab3:
 
     st.markdown('<div class="sh">🏢 Regional Office Performance</div><div class="sb">',
                 unsafe_allow_html=True)
-    disp = terr[["Territory","Unique Leads","New Leads","Appointments","Quote","Customers",
-                 "Sales Amount ($)","NL Customers","NL Sales ($)",
+    disp = terr[["Territory","Unique Leads","New Leads","Appointments","Quote",
+                 "Customers","Sales Amount ($)","NL Customers","NL Sales ($)",
                  "Leads %","Sales %","APT/Leads","Order/APT","Order/Leads"]].copy()
     tr_row = pd.DataFrame([{
-        "Territory":"Total","Unique Leads":int(tot["Unique Leads"]),
-        "New Leads":int(tot["New Leads"]),"Appointments":int(tot["Appointments"]),
-        "Quote":int(tot["Quote"]),"Customers":int(tot["Customers"]),
-        "Sales Amount ($)":tot["Sales Amount ($)"],"NL Customers":int(tot["NL Customers"]),
-        "NL Sales ($)":tot["NL Sales ($)"],"Leads %":100.0,"Sales %":100.0,
+        "Territory":"Total",
+        "Unique Leads":int(tot["Unique Leads"]),"New Leads":int(tot["New Leads"]),
+        "Appointments":int(tot["Appointments"]),"Quote":int(tot["Quote"]),
+        "Customers":int(tot["Customers"]),"Sales Amount ($)":tot["Sales Amount ($)"],
+        "NL Customers":int(tot["NL Customers"]),"NL Sales ($)":tot["NL Sales ($)"],
+        "Leads %":100.0,"Sales %":100.0,
         "APT/Leads":round(tot["Appointments"]/tot["Unique Leads"]*100,2) if tot["Unique Leads"] else 0,
         "Order/APT":round(tot["Customers"]/tot["Appointments"]*100,2) if tot["Appointments"] else 0,
         "Order/Leads":round(tot["Customers"]/tot["Unique Leads"]*100,2) if tot["Unique Leads"] else 0
@@ -579,10 +604,10 @@ with tab3:
     st.markdown('<div class="sh">📊 Campaign Breakdown by Territory</div><div class="sb">',
                 unsafe_allow_html=True)
     tc = raw.copy()
-    if sel_off != "All": tc = tc[tc["Territory"] == sel_off]
-    pm = st.selectbox("Metric", ["Sales Amount ($)","Unique Leads","Appointments",
-                                  "Customers","Spend ($)"], key="pm",
-                       label_visibility="collapsed")
+    if sel_off != "All": tc = tc[tc["Territory"]==sel_off]
+    pm = st.selectbox("Metric",
+                      ["Sales Amount ($)","Unique Leads","Appointments","Customers","Spend ($)"],
+                      key="pm", label_visibility="collapsed")
     fg = px.bar(tc.sort_values("Territory"), x="Territory", y=pm,
                 color="Campaign", barmode="group",
                 color_discrete_sequence=COLORS, text_auto=".2s")
@@ -594,3 +619,5 @@ with tab3:
                                  xanchor="right", x=1))
     st.plotly_chart(fg, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
