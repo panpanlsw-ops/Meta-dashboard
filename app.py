@@ -212,38 +212,50 @@ if "Overview" in data:
     st.markdown('<span class="section-title">📈 Performances</span>', unsafe_allow_html=True)
     st.markdown('<div class="chart-container" style="border-radius:0 12px 12px 12px;">', unsafe_allow_html=True)
 
-    positive_good = {
-        "Spend ($)": False, "Impressions": False, "Reach": False,
-        "Frequency": True,  "Clicks": False, "Leads": False,
-        "Purchases": False, "ROAS": True, "CPM ($)": False,
-        "CPC ($)": False, "CTR (%)": True, "Conversion Rate (%)": True,
-    }
+    # icon, metric key, format, positive_is_good
+    KPI_CONFIG = [
+        ("💸", "Spend ($)",        "currency", False),
+        ("🖱️", "Clicks",           "number",   True),
+        ("🔄", "Conversions",      "number",   True),
+        ("👥", "CRM Leads",        "number",   True),
+        ("📅", "Appointments",     "number",   True),
+        ("🤝", "Customers",        "number",   True),
+        ("💰", "Sales Amount ($)", "currency", True),
+    ]
 
-    row1_metrics = ["Spend ($)", "Impressions", "Reach", "Frequency"]
-    row2_metrics = ["Clicks", "Leads", "Purchases", "ROAS"]
+    def fmt_value(val, fmt):
+        if fmt == "currency":
+            if abs(val) >= 1_000_000: return f"${val/1_000_000:.1f}M"
+            if abs(val) >= 1_000:     return f"${val/1_000:.1f}K"
+            return f"${val:,.0f}"
+        else:
+            return fmt_number(val)
 
-    def render_kpi_row(metrics):
-        cols = st.columns(len(metrics))
-        for col, metric in zip(cols, metrics):
-            if metric not in overview.index:
-                continue
-            row = overview.loc[metric]
-            cur  = row["Current Period"]
-            chg  = row["Change %"]
-            pg   = positive_good.get(metric, True)
-            d_html = delta_html(chg, pg)
+    cols = st.columns(len(KPI_CONFIG))
+    for col, (icon, metric, fmt, pg) in zip(cols, KPI_CONFIG):
+        if metric not in overview.index:
             with col:
                 st.markdown(f"""
                 <div class="kpi-card">
-                    <div class="kpi-label">{metric}</div>
-                    <div class="kpi-value">{fmt_number(cur)}</div>
-                    {d_html}
+                    <div class="kpi-label">{icon} {metric}</div>
+                    <div class="kpi-value" style="color:#9ca3af;">—</div>
+                    <span class="kpi-delta-neu">No data</span>
                 </div>
                 """, unsafe_allow_html=True)
+            continue
+        row   = overview.loc[metric]
+        cur   = row["Current Period"]
+        chg   = row["Change %"]
+        d_html = delta_html(chg, pg)
+        with col:
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-label">{icon} {metric}</div>
+                <div class="kpi-value">{fmt_value(cur, fmt)}</div>
+                {d_html}
+            </div>
+            """, unsafe_allow_html=True)
 
-    render_kpi_row(row1_metrics)
-    st.markdown("<br>", unsafe_allow_html=True)
-    render_kpi_row(row2_metrics)
     st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
