@@ -16,11 +16,11 @@ def img_b64(path):
 
 _ls = img_b64("lifesource_logo.png")
 LIFESOURCE_IMG = (
-    f'<img src="data:image/png;base64,{_ls}" height="36" style="object-fit:contain;vertical-align:middle">' 
+    f'<img src="data:image/png;base64,{_ls}" height="24" style="object-fit:contain;vertical-align:middle">' 
     if _ls else '<span style="font-size:1rem;font-weight:700;color:#cc2200">LifeSource</span>'
 )
 
-META_LOGO_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" height="30" style="vertical-align:middle">
+META_LOGO_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" height="18" style="vertical-align:middle">
   <path d="M8 25C8 16.2 13.5 9 21 9c4 0 7.5 2.2 10.5 6.2C34.5 11.2 38 9 42 9
     c7.5 0 13 7.2 13 16 0 4.4-1.4 8.4-3.8 11.3-2.2 2.6-4.8 4-7.7 4
     -3.8 0-6.5-1.8-10.5-7.4-4 5.6-6.7 7.4-10.5 7.4-2.9 0-5.5-1.4-7.7-4
@@ -30,7 +30,7 @@ META_LOGO_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" 
   <text x="62" y="36" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="white">Meta</text>
 </svg>"""
 
-META_LOGO_BLUE_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" height="28" style="vertical-align:middle">
+META_LOGO_BLUE_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" height="24" style="vertical-align:middle">
   <path d="M8 25C8 16.2 13.5 9 21 9c4 0 7.5 2.2 10.5 6.2C34.5 11.2 38 9 42 9
     c7.5 0 13 7.2 13 16 0 4.4-1.4 8.4-3.8 11.3-2.2 2.6-4.8 4-7.7 4
     -3.8 0-6.5-1.8-10.5-7.4-4 5.6-6.7 7.4-10.5 7.4-2.9 0-5.5-1.4-7.7-4
@@ -44,7 +44,10 @@ META_LOGO_BLUE_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200
 st.markdown("""
 <style>
   .main{background:#f4f6fb}
-  .block-container{padding:1.2rem 1.8rem}
+  .block-container{padding:0.5rem 1.2rem}
+  header[data-testid="stHeader"]{display:none}
+  #MainMenu{visibility:hidden}
+  footer{visibility:hidden}
   section[data-testid="stSidebar"]{background:#1a1e3c}
   section[data-testid="stSidebar"] *{color:#e2e8f0!important}
   section[data-testid="stSidebar"] .stSelectbox label,
@@ -52,34 +55,34 @@ st.markdown("""
   section[data-testid="stSidebar"] .stMarkdown p{color:#7c8ab0!important;font-size:0.72rem!important;
     text-transform:uppercase;letter-spacing:0.06em}
 
-  .sec-hdr{background:#1877F2;color:white;padding:6px 14px;border-radius:8px 8px 0 0;
-    font-weight:600;font-size:0.85rem;display:flex;align-items:center;gap:6px}
+  .sec-hdr{background:#1877F2;color:white;padding:5px 12px;border-radius:6px 6px 0 0;
+    font-weight:600;font-size:0.78rem;display:flex;align-items:center;gap:5px}
   .sec-body{background:white;border:1px solid #e5e7eb;border-top:none;
-    border-radius:0 0 8px 8px;padding:14px;margin-bottom:14px}
+    border-radius:0 0 6px 6px;padding:10px;margin-bottom:10px}
 
   .kpi-strip{display:flex;gap:0;background:white;border:1px solid #e5e7eb;
-    border-radius:10px;overflow:hidden;margin-bottom:10px}
-  .kpi-cell{flex:1;padding:14px 16px;border-right:1px solid #e5e7eb;position:relative}
+    border-radius:8px;overflow:hidden;margin-bottom:5px}
+  .kpi-cell{flex:1;padding:8px 12px 7px;border-right:1px solid #e5e7eb;position:relative}
   .kpi-cell:last-child{border-right:none}
   .kpi-cell::after{content:'';position:absolute;top:0;left:0;right:0;height:3px}
   .kpi-c1::after{background:#1877F2}.kpi-c2::after{background:#8b5cf6}
   .kpi-c3::after{background:#10b981}.kpi-c4::after{background:#f59e0b}
   .kpi-c5::after{background:#06b6d4}.kpi-c6::after{background:#ec4899}
   .kpi-c7::after{background:#22c55e}
-  .kpi-lbl{font-size:0.68rem;color:#9ca3af;font-weight:600;text-transform:uppercase;
-    letter-spacing:0.07em;margin-bottom:4px}
-  .kpi-val{font-size:1.45rem;font-weight:700;color:#111827;margin-bottom:3px;line-height:1}
-  .kpi-pos{font-size:0.75rem;color:#10b981;font-weight:600}
-  .kpi-neg{font-size:0.75rem;color:#ef4444;font-weight:600}
+  .kpi-lbl{font-size:0.62rem;color:#9ca3af;font-weight:600;text-transform:uppercase;
+    letter-spacing:0.07em;margin-bottom:2px}
+  .kpi-val{font-size:1.1rem;font-weight:700;color:#111827;margin-bottom:1px;line-height:1.1}
+  .kpi-pos{font-size:0.68rem;color:#10b981;font-weight:600}
+  .kpi-neg{font-size:0.68rem;color:#ef4444;font-weight:600}
 
   .terr-strip{display:flex;gap:0;background:white;border:1px solid #e5e7eb;
-    border-radius:10px;overflow:hidden;margin-bottom:14px}
-  .terr-cell{flex:1;padding:16px 12px;border-right:1px solid #e5e7eb;text-align:center}
+    border-radius:8px;overflow:hidden;margin-bottom:10px}
+  .terr-cell{flex:1;padding:10px 10px 8px;border-right:1px solid #e5e7eb;text-align:center}
   .terr-cell:last-child{border-right:none}
-  .terr-top{display:block;height:3px;border-radius:2px;margin-bottom:10px}
-  .terr-lbl{font-size:0.68rem;color:#9ca3af;font-weight:600;text-transform:uppercase;
-    letter-spacing:0.07em;margin-bottom:6px}
-  .terr-val{font-size:1.55rem;font-weight:700;color:#111827}
+  .terr-top{display:block;height:3px;border-radius:2px;margin-bottom:6px}
+  .terr-lbl{font-size:0.62rem;color:#9ca3af;font-weight:600;text-transform:uppercase;
+    letter-spacing:0.07em;margin-bottom:3px}
+  .terr-val{font-size:1.2rem;font-weight:700;color:#111827}
 </style>
 """, unsafe_allow_html=True)
 
@@ -125,8 +128,8 @@ def chart_layout(fig, h=260):
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown(f"""
-    <div style="padding:14px 10px 12px;border-bottom:1px solid rgba(255,255,255,0.08);
-                display:flex;flex-direction:column;align-items:center;gap:8px">
+    <div style="padding:10px 8px 8px;border-bottom:1px solid rgba(255,255,255,0.08);
+                display:flex;flex-direction:column;align-items:center;gap:5px">
       <div style="display:flex;align-items:center;justify-content:center">
         {LIFESOURCE_IMG}
       </div>
@@ -187,7 +190,7 @@ titles = {
     "🗺️ By Territory": "Performance by Territory",
 }
 st.markdown(f"""
-<div style="background:#1877F2;padding:11px 20px;border-radius:10px;margin-bottom:16px;
+<div style="background:#1877F2;padding:8px 16px;border-radius:8px;margin-bottom:10px;
             display:flex;align-items:center;justify-content:space-between">
   <div style="display:flex;align-items:center;gap:14px">
     {META_LOGO_BLUE_SVG.replace("fill=\"#0082FB\"","fill=\"white\"").replace("fill=\"#0082FB\"","fill=\"white\"")}
@@ -198,7 +201,7 @@ st.markdown(f"""
   <div style="display:flex;align-items:center;gap:12px">
     <span style="color:#bfdbfe;font-size:0.8rem">Dec 2024</span>
     <div style="background:white;border-radius:6px;padding:3px 10px;display:flex;align-items:center">
-      {LIFESOURCE_IMG.replace('height="36"','height="28"')}
+      {LIFESOURCE_IMG.replace('height="24"','height="24"')}
     </div>
   </div>
 </div>
@@ -269,7 +272,7 @@ if tab_sel == "📊 MTD Overview":
                          hole=0.42, color_discrete_sequence=COLORS)
             fig.update_traces(textposition="inside", textinfo="percent",
                               hovertemplate="<b>%{label}</b><br>$%{value:,.0f}<extra></extra>")
-            fig.update_layout(height=250, margin=dict(t=0, b=0, l=0, r=0),
+            fig.update_layout(height=180, margin=dict(t=0, b=0, l=0, r=0),
                               paper_bgcolor="white", showlegend=True,
                               legend=dict(font=dict(size=9), orientation="v"))
             st.plotly_chart(fig, use_container_width=True)
@@ -281,7 +284,7 @@ if tab_sel == "📊 MTD Overview":
             fig2 = px.bar(ld, x="CRM Leads", y="Campaign Objective", orientation="h",
                           color="Campaign Objective", color_discrete_sequence=COLORS, text="CRM Leads")
             fig2.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
-            fig2.update_layout(height=250, margin=dict(t=0, b=0, l=0, r=50),
+            fig2.update_layout(height=180, margin=dict(t=0, b=0, l=0, r=50),
                                showlegend=False, paper_bgcolor="white", plot_bgcolor="white",
                                xaxis=dict(showgrid=False, visible=False),
                                yaxis=dict(showgrid=False))
@@ -295,7 +298,7 @@ if tab_sel == "📊 MTD Overview":
                           color="Campaign Objective", color_discrete_sequence=COLORS,
                           text="Sales Amount ($)")
             fig3.update_traces(texttemplate="$%{text:,.0f}", textposition="outside")
-            fig3.update_layout(height=250, margin=dict(t=0, b=0, l=0, r=70),
+            fig3.update_layout(height=180, margin=dict(t=0, b=0, l=0, r=70),
                                showlegend=False, paper_bgcolor="white", plot_bgcolor="white",
                                xaxis=dict(showgrid=False, visible=False),
                                yaxis=dict(showgrid=False))
@@ -387,7 +390,7 @@ elif tab_sel == "📈 Trends":
             line=dict(color="#22c55e", width=2.5),
             fill="tozeroy", fillcolor="rgba(34,197,94,0.08)",
             hovertemplate="<b>%{x|%b %d}</b><br>ROAS: %{y:.2f}x<extra></extra>"))
-        fig_r.update_layout(height=210, margin=dict(t=10, b=30, l=50, r=10),
+        fig_r.update_layout(height=180, margin=dict(t=10, b=30, l=50, r=10),
                             paper_bgcolor="white", plot_bgcolor="white",
                             xaxis=dict(showgrid=False, tickformat="%b %d"),
                             yaxis=dict(showgrid=True, gridcolor="#f3f4f6", ticksuffix="x"))
@@ -403,7 +406,7 @@ elif tab_sel == "📈 Trends":
         fig_sv.add_trace(go.Scatter(x=agg["Date"], y=agg["Sales Amount ($)"], name="Sales",
                                     line=dict(color="#22c55e", width=2.5),
                                     hovertemplate="Sales: $%{y:,.0f}<extra></extra>"), secondary_y=True)
-        fig_sv.update_layout(height=210, margin=dict(t=10, b=30, l=50, r=50),
+        fig_sv.update_layout(height=180, margin=dict(t=10, b=30, l=50, r=50),
                              paper_bgcolor="white", plot_bgcolor="white",
                              legend=dict(orientation="h", y=1.08),
                              hovermode="x unified",
@@ -447,7 +450,7 @@ elif tab_sel == "📈 Trends":
         fig_cl = go.Figure(go.Bar(x=agg["Date"], y=agg["Clicks"],
                                   marker_color="rgba(139,92,246,0.75)",
                                   hovertemplate="Clicks: %{y:,.0f}<extra></extra>"))
-        fig_cl.update_layout(height=190, margin=dict(t=10, b=30, l=60, r=10),
+        fig_cl.update_layout(height=170, margin=dict(t=10, b=30, l=60, r=10),
                              paper_bgcolor="white", plot_bgcolor="white",
                              xaxis=dict(showgrid=False, tickformat="%b %d"),
                              yaxis=dict(showgrid=True, gridcolor="#f3f4f6"))
@@ -459,7 +462,7 @@ elif tab_sel == "📈 Trends":
         fig_ld = go.Figure(go.Bar(x=agg["Date"], y=agg["CRM Leads"],
                                   marker_color="rgba(245,158,11,0.75)",
                                   hovertemplate="Leads: %{y:,.0f}<extra></extra>"))
-        fig_ld.update_layout(height=190, margin=dict(t=10, b=30, l=60, r=10),
+        fig_ld.update_layout(height=170, margin=dict(t=10, b=30, l=60, r=10),
                              paper_bgcolor="white", plot_bgcolor="white",
                              xaxis=dict(showgrid=False, tickformat="%b %d"),
                              yaxis=dict(showgrid=True, gridcolor="#f3f4f6"))
@@ -545,7 +548,7 @@ elif tab_sel == "🗺️ By Territory":
                         color_discrete_sequence=COLORS)
         fig_dl.update_traces(textposition="inside", textinfo="percent",
                               hovertemplate="<b>%{label}</b><br>%{value:,} leads<br>%{percent}<extra></extra>")
-        fig_dl.update_layout(height=340, margin=dict(t=40, b=10, l=0, r=0),
+        fig_dl.update_layout(height=260, margin=dict(t=40, b=10, l=0, r=0),
                              paper_bgcolor="white",
                              legend=dict(font=dict(size=10), orientation="v"),
                              title_font=dict(size=11, color="#6b7280"))
@@ -558,7 +561,7 @@ elif tab_sel == "🗺️ By Territory":
                         color_discrete_sequence=COLORS)
         fig_ds.update_traces(textposition="inside", textinfo="percent",
                               hovertemplate="<b>%{label}</b><br>$%{value:,.0f}<br>%{percent}<extra></extra>")
-        fig_ds.update_layout(height=340, margin=dict(t=40, b=10, l=0, r=0),
+        fig_ds.update_layout(height=260, margin=dict(t=40, b=10, l=0, r=0),
                              paper_bgcolor="white",
                              legend=dict(font=dict(size=10), orientation="v"),
                              title_font=dict(size=11, color="#6b7280"))
@@ -625,7 +628,7 @@ elif tab_sel == "🗺️ By Territory":
         labels={"Territory": "Office", pv_metric: pv_metric.replace(" ($)", "")},
     )
     fig_grp.update_layout(
-        height=360, margin=dict(t=10, b=90, l=60, r=10),
+        height=260, margin=dict(t=10, b=90, l=60, r=10),
         paper_bgcolor="white", plot_bgcolor="white",
         xaxis=dict(showgrid=False, tickangle=-30),
         yaxis=dict(showgrid=True, gridcolor="#f3f4f6"),
