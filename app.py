@@ -24,28 +24,33 @@ c1.4 0 2.6-.8 4.2-3.4-1.6-2.8-2.8-4.6-4.2-4.6zm11.4 0c-1.4 0-2.6 1.8-4.2 4.6
 
 st.markdown("""
 <style>
+/* Hide Streamlit default chrome */
 #MainMenu, footer { display:none!important }
 header[data-testid="stHeader"] { display:none!important }
 button[data-testid="collapsedControl"] { display:none!important }
-.block-container { padding:0!important; max-width:100%!important }
 
-/* ── Sidebar dark ── */
+/* Main content area — no extra padding */
+.block-container {
+    padding-top: 0 !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    padding-bottom: 1rem !important;
+    max-width: 100% !important;
+}
+
+/* Sidebar dark theme */
 [data-testid="stSidebar"] {
     background-color: #1a1e3c !important;
-    min-width: 230px !important;
-    max-width: 230px !important;
 }
-[data-testid="stSidebar"] .stMarkdown p {
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
     color: #6b7db0 !important;
     font-size: 0.65rem !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.1em !important;
+    margin-bottom: 4px !important;
 }
-[data-testid="stSidebar"] label {
-    color: #c8d0e8 !important;
-    font-size: 0.78rem !important;
-}
+[data-testid="stSidebar"] label { color: #c8d0e8 !important; }
 [data-testid="stSidebar"] .stSelectbox label,
 [data-testid="stSidebar"] .stDateInput label,
 [data-testid="stSidebar"] .stFileUploader label {
@@ -54,68 +59,40 @@ button[data-testid="collapsedControl"] { display:none!important }
     text-transform: uppercase !important;
     letter-spacing: 0.07em !important;
 }
-[data-testid="stSidebar"] hr {
-    border-color: rgba(255,255,255,0.12) !important;
-}
-[data-testid="stSidebar"] .stDownloadButton button,
-[data-testid="stSidebar"] .stButton button {
-    background: rgba(255,255,255,0.07) !important;
-    color: #c8d0e8 !important;
-    border: 1px solid rgba(255,255,255,0.15) !important;
-    border-radius: 6px !important;
-    font-size: 0.78rem !important;
-}
+[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.12) !important; }
 
-/* ── Radio as nav buttons ── */
+/* Radio as nav links */
+[data-testid="stSidebar"] .stRadio > label { display:none !important; }
 [data-testid="stSidebar"] .stRadio > div {
     display: flex !important;
     flex-direction: column !important;
-    gap: 3px !important;
+    gap: 2px !important;
 }
 [data-testid="stSidebar"] .stRadio > div > label {
-    background: transparent !important;
-    border-radius: 7px !important;
+    display: flex !important;
+    align-items: center !important;
     padding: 9px 14px !important;
+    border-radius: 7px !important;
+    margin: 0 4px !important;
     cursor: pointer !important;
     color: #8a9bc0 !important;
     font-size: 0.83rem !important;
     font-weight: 500 !important;
+    background: transparent !important;
     border: none !important;
-    margin: 0 4px !important;
-    transition: background 0.15s !important;
+    box-shadow: none !important;
 }
 [data-testid="stSidebar"] .stRadio > div > label:hover {
-    background: rgba(255,255,255,0.08) !important;
-    color: #dde3f5 !important;
+    background: rgba(255,255,255,0.07) !important;
+    color: #c8d0e8 !important;
 }
 [data-testid="stSidebar"] .stRadio > div > label:has(input:checked) {
     background: #1877F2 !important;
     color: white !important;
 }
-[data-testid="stSidebar"] .stRadio input[type="radio"] {
-    display: none !important;
-}
-[data-testid="stSidebar"] .stRadio > label {
-    display: none !important;
-}
+[data-testid="stSidebar"] .stRadio input { display:none !important; }
 
-/* ── Top bar ── */
-.topbar {
-    background: #1877F2; height: 46px;
-    display: flex; align-items: center; padding: 0 20px;
-}
-.tb-brand { display:flex; align-items:center; gap:7px; }
-.tb-name  { color:white; font-weight:700; font-size:0.9rem; }
-.tb-sep   { width:1px; height:22px; background:rgba(255,255,255,0.3); margin:0 14px; }
-.tb-title { color:white; font-size:0.85rem; font-weight:600; }
-.tb-right { margin-left:auto; display:flex; align-items:center; gap:12px; }
-.tb-date  { color:rgba(255,255,255,0.82); font-size:0.78rem; }
-.tb-ls    { background:white; border-radius:5px; padding:3px 8px; display:flex; align-items:center; }
-
-/* ── Page padding ── */
-.page { padding: 18px 22px; background:#f4f6fb; min-height:calc(100vh - 46px); }
-
-/* ── Individual KPI cards ── */
+/* KPI cards with gap */
 .krow { display:grid; gap:12px; margin-bottom:12px; }
 .kr4  { grid-template-columns:repeat(4,1fr); }
 .kr3  { grid-template-columns:repeat(3,1fr); }
@@ -132,32 +109,34 @@ button[data-testid="collapsedControl"] { display:none!important }
 .c3::before{background:#8b5cf6} .c4::before{background:#10b981}
 .c5::before{background:#f59e0b} .c6::before{background:#ec4899}
 .c7::before{background:#06b6d4}
-.kl { font-size:0.62rem; color:#9ca3af; font-weight:600; text-transform:uppercase;
-      letter-spacing:.07em; margin-bottom:5px; }
+.kl { font-size:0.62rem; color:#9ca3af; font-weight:600;
+      text-transform:uppercase; letter-spacing:.07em; margin-bottom:5px; }
 .kv { font-size:1.4rem; font-weight:700; color:#111827; line-height:1.1; margin-bottom:5px; }
 .kp { font-size:0.68rem; color:#10b981; font-weight:600; }
 .kn { font-size:0.68rem; color:#ef4444; font-weight:600; }
 
-/* ── Territory strip ── */
+/* Territory strip */
 .tstrip { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:12px; }
 .tcell  { background:white; border:1px solid #e5e7eb; border-radius:10px;
           padding:12px 14px 10px; text-align:center;
           box-shadow:0 1px 4px rgba(0,0,0,0.05); }
-.ttop { display:block; height:3px; border-radius:3px; margin-bottom:8px; }
-.tl   { font-size:0.62rem; color:#9ca3af; font-weight:600; text-transform:uppercase;
-        letter-spacing:.06em; margin-bottom:4px; }
-.tv   { font-size:1.1rem; font-weight:700; color:#111827; }
+.ttop   { display:block; height:3px; border-radius:3px; margin-bottom:8px; }
+.tl     { font-size:0.62rem; color:#9ca3af; font-weight:600;
+          text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+.tv     { font-size:1.1rem; font-weight:700; color:#111827; }
 
-/* ── Section header ── */
-.sh { background:#1877F2; color:white; padding:6px 14px; border-radius:8px 8px 0 0;
-      font-weight:600; font-size:0.78rem; display:flex; align-items:center; gap:5px; }
+/* Section cards */
+.sh { background:#1877F2; color:white; padding:6px 14px;
+      border-radius:8px 8px 0 0; font-weight:600; font-size:0.78rem;
+      display:flex; align-items:center; gap:5px; }
 .sb { background:white; border:1px solid #e5e7eb; border-top:none;
       border-radius:0 0 8px 8px; padding:10px; margin-bottom:10px; }
 
-div[data-testid="stVerticalBlock"]>div { gap:0!important }
-.element-container { margin-bottom:0!important }
-.stPlotlyChart { margin:0!important; padding:0!important }
-div[data-testid="column"] { padding:0 4px!important }
+/* Tighten Streamlit gaps */
+div[data-testid="stVerticalBlock"] > div { gap:0 !important; }
+.element-container { margin-bottom:0 !important; }
+.stPlotlyChart { margin:0 !important; padding:0 !important; }
+div[data-testid="column"] { padding:0 4px !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -203,21 +182,21 @@ if "gran" not in st.session_state: st.session_state.gran = "Daily"
 try:    data = load_data("meta_ads_data.xlsx")
 except: data = {}
 
-# ════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 # SIDEBAR
-# ════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown(f"""
-    <div style="padding:16px 14px 14px;
+    <div style="padding:16px 10px 14px;
                 border-bottom:1px solid rgba(255,255,255,0.1);
-                text-align:center">
-      <img src="data:image/png;base64,{LS_B64}"
-           height="36" style="object-fit:contain;display:block;margin:0 auto 8px">
+                text-align:center;">
+      <img src="data:image/png;base64,{LS_B64}" height="34"
+           style="object-fit:contain;display:block;margin:0 auto 8px;">
       <div style="display:inline-flex;align-items:center;gap:6px;
                   background:rgba(255,255,255,0.08);border-radius:6px;
-                  padding:4px 12px">
+                  padding:4px 12px;">
         {META_SVG}
-        <span style="color:white;font-size:0.8rem;font-weight:600">Meta Ads</span>
+        <span style="color:white;font-size:0.8rem;font-weight:600;">Meta Ads</span>
       </div>
     </div>
     """, unsafe_allow_html=True)
@@ -240,7 +219,7 @@ with st.sidebar:
         dr = data["Daily Performance"].copy()
         dr["Date"] = pd.to_datetime(dr["Date"])
         mn, mx = dr["Date"].min().date(), dr["Date"].max().date()
-        date_range = st.date_input("Date range", value=(mn,mx),
+        date_range = st.date_input("Date range", value=(mn, mx),
                                    min_value=mn, max_value=mx)
 
     st.markdown("---")
@@ -262,35 +241,44 @@ with st.sidebar:
         st.download_button("⬇ Export CSV", csv, "meta_data.csv",
                            "text/csv", use_container_width=True)
 
-# ════════════════════════════════════════════════
-# TOP BAR
-# ════════════════════════════════════════════════
-titles = {"📊  MTD Overview":"MTD Overview",
-          "📈  Trends":"Trends",
-          "🗺️  By Territory":"By Territory"}
+# ════════════════════════════════════════════════════════════
+# TOP BAR — rendered as a Streamlit container with columns
+# ════════════════════════════════════════════════════════════
+titles = {
+    "📊  MTD Overview": "MTD Overview",
+    "📈  Trends":       "Trends",
+    "🗺️  By Territory": "By Territory",
+}
 
-st.markdown(f"""
-<div class="topbar">
-  <div class="tb-brand">{META_SVG}
-    <span class="tb-name">Meta Ads</span>
-  </div>
-  <div class="tb-sep"></div>
-  <span class="tb-title">{titles[page]}</span>
-  <div class="tb-right">
-    <span class="tb-date">Dec 2024</span>
-    <div class="tb-ls">
-      <img src="data:image/png;base64,{LS_B64}" height="20"
-           style="object-fit:contain">
+bar_left, bar_right = st.columns([6, 1])
+with bar_left:
+    st.markdown(f"""
+    <div style="background:#1877F2;border-radius:8px;padding:10px 18px;
+                display:flex;align-items:center;gap:0;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:7px;">
+        {META_SVG}
+        <span style="color:white;font-weight:700;font-size:0.9rem;">Meta Ads</span>
+      </div>
+      <div style="width:1px;height:20px;background:rgba(255,255,255,0.3);margin:0 14px;"></div>
+      <span style="color:white;font-size:0.85rem;font-weight:600;">{titles[page]}</span>
+      <span style="margin-left:auto;color:rgba(255,255,255,0.8);font-size:0.78rem;">Dec 2024</span>
     </div>
-  </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+with bar_right:
+    st.markdown(f"""
+    <div style="background:#1877F2;border-radius:8px;padding:10px 12px;
+                display:flex;align-items:center;justify-content:center;
+                margin-bottom:14px;">
+      <div style="background:white;border-radius:5px;padding:2px 8px;">
+        <img src="data:image/png;base64,{LS_B64}" height="22"
+             style="object-fit:contain;display:block;">
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-st.markdown("<div class=\'page\'>", unsafe_allow_html=True)
-
-# ════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 # PAGE 1 — MTD OVERVIEW
-# ════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 if page == "📊  MTD Overview":
 
     if "Overview" in data:
@@ -298,7 +286,7 @@ if page == "📊  MTD Overview":
 
         def kc(m, cls, cur=False, pg=True):
             if m not in ov.index:
-                return (f'<div class="kcell {cls}">' 
+                return (f'<div class="kcell {cls}">'
                         f'<div class="kl">{m}</div><div class="kv">—</div></div>')
             r = ov.loc[m]
             v = fc(r["Current Period"]) if cur else fn(r["Current Period"])
@@ -323,9 +311,8 @@ if page == "📊  MTD Overview":
     if "Campaign Performance" in data:
         camp_df = data["Campaign Performance"].copy()
         opts = ["All Campaigns"] + list(camp_df["Campaign Objective"].unique())
-        st.markdown("<p style=\'font-size:0.75rem;color:#6b7280;margin:8px 0 4px\'>"
-                    "Select campaign to drill down:</p>", unsafe_allow_html=True)
 
+        st.caption("Select campaign to drill down:")
         bc = st.columns(len(opts))
         for i, lb in enumerate(opts):
             if bc[i].button(lb, key=f"cp{i}", use_container_width=True,
@@ -336,9 +323,7 @@ if page == "📊  MTD Overview":
         sel = st.session_state.t1c
         fd  = camp_df if sel=="All Campaigns" else camp_df[camp_df["Campaign Objective"]==sel]
 
-        st.markdown("<div style=\'height:8px\'></div>", unsafe_allow_html=True)
         c1, c2, c3 = st.columns(3)
-
         with c1:
             st.markdown('<div class="sh">💸 Spend by Campaign</div><div class="sb">',
                         unsafe_allow_html=True)
@@ -398,9 +383,9 @@ if page == "📊  MTD Overview":
         st.dataframe(tb, use_container_width=True, hide_index=True, height=160)
         st.markdown("</div>", unsafe_allow_html=True)
 
-# ════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 # PAGE 2 — TRENDS
-# ════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 elif page == "📈  Trends":
 
     if "Daily Performance" not in data:
@@ -421,18 +406,20 @@ elif page == "📈  Trends":
     }).reset_index()
 
     gc = st.columns([1,1,1,5])
-    if gc[0].button("Daily",  key="gd", use_container_width=True,
+    if gc[0].button("Daily",   key="gd", use_container_width=True,
                     type="primary" if st.session_state.gran=="Daily"   else "secondary"):
         st.session_state.gran="Daily";   st.rerun()
-    if gc[1].button("Weekly", key="gw", use_container_width=True,
+    if gc[1].button("Weekly",  key="gw", use_container_width=True,
                     type="primary" if st.session_state.gran=="Weekly"  else "secondary"):
         st.session_state.gran="Weekly";  st.rerun()
-    if gc[2].button("Monthly",key="gm", use_container_width=True,
+    if gc[2].button("Monthly", key="gm", use_container_width=True,
                     type="primary" if st.session_state.gran=="Monthly" else "secondary"):
         st.session_state.gran="Monthly"; st.rerun()
 
-    if st.session_state.gran=="Weekly":  agg = agg.resample("W", on="Date").sum().reset_index()
-    if st.session_state.gran=="Monthly": agg = agg.resample("ME",on="Date").sum().reset_index()
+    if st.session_state.gran=="Weekly":
+        agg = agg.resample("W",  on="Date").sum().reset_index()
+    if st.session_state.gran=="Monthly":
+        agg = agg.resample("ME", on="Date").sum().reset_index()
 
     mopts  = ["Spend ($)","Sales Amount ($)","CRM Leads","Clicks",
               "Conversions","Appointments","Customers","ROAS"]
@@ -446,10 +433,11 @@ elif page == "📈  Trends":
         st.markdown('<div class="sh">📈 Metrics Over Time</div><div class="sb">',
                     unsafe_allow_html=True)
         fm = go.Figure()
-        for m,col in zip(sel_m, COLORS):
+        for m, col in zip(sel_m, COLORS):
             if m not in agg.columns: continue
             fm.add_trace(go.Scatter(x=agg["Date"], y=agg[m], name=m,
-                mode="lines+markers", line=dict(color=col, width=2), marker=dict(size=3),
+                mode="lines+markers", line=dict(color=col, width=2),
+                marker=dict(size=3),
                 hovertemplate=f"<b>%{{x|%b %d}}</b><br>{m}: %{{y:,.1f}}<extra></extra>"))
         fm.update_layout(**ch(220))
         st.plotly_chart(fm, use_container_width=True)
@@ -461,7 +449,8 @@ elif page == "📈  Trends":
     with r1:
         st.markdown('<div class="sh">💹 ROAS Trend</div><div class="sb">',
                     unsafe_allow_html=True)
-        fr = go.Figure(go.Scatter(x=agg["Date"], y=agg["ROAS"], mode="lines+markers",
+        fr = go.Figure(go.Scatter(
+            x=agg["Date"], y=agg["ROAS"], mode="lines+markers",
             line=dict(color="#22c55e", width=2), fill="tozeroy",
             fillcolor="rgba(34,197,94,0.07)",
             hovertemplate="ROAS: %{y:.2f}x<extra></extra>"))
@@ -475,15 +464,18 @@ elif page == "📈  Trends":
         st.markdown('<div class="sh">💸 Spend vs Sales</div><div class="sb">',
                     unsafe_allow_html=True)
         fsv = make_subplots(specs=[[{"secondary_y": True}]])
-        fsv.add_trace(go.Bar(x=agg["Date"], y=agg["Spend ($)"], name="Spend",
+        fsv.add_trace(go.Bar(
+            x=agg["Date"], y=agg["Spend ($)"], name="Spend",
             marker_color="rgba(24,119,242,0.65)",
             hovertemplate="Spend: $%{y:,.0f}<extra></extra>"), secondary_y=False)
-        fsv.add_trace(go.Scatter(x=agg["Date"], y=agg["Sales Amount ($)"], name="Sales",
+        fsv.add_trace(go.Scatter(
+            x=agg["Date"], y=agg["Sales Amount ($)"], name="Sales",
             line=dict(color="#22c55e", width=2),
             hovertemplate="Sales: $%{y:,.0f}<extra></extra>"), secondary_y=True)
         fsv.update_layout(height=180, margin=dict(t=6,b=28,l=42,r=42),
             paper_bgcolor="white", plot_bgcolor="white",
-            legend=dict(orientation="h", y=1.1), hovermode="x unified",
+            legend=dict(orientation="h", y=1.1),
+            hovermode="x unified",
             xaxis=dict(showgrid=False, tickformat="%b %d"))
         fsv.update_yaxes(showgrid=True, gridcolor="#f3f4f6", secondary_y=False)
         fsv.update_yaxes(showgrid=False, secondary_y=True)
@@ -495,10 +487,10 @@ elif page == "📈  Trends":
         st.markdown('<div class="sh">📡 Impressions & Reach</div><div class="sb">',
                     unsafe_allow_html=True)
         fa = go.Figure()
-        fa.add_trace(go.Scatter(x=agg["Date"], y=agg["Impressions"], name="Impressions",
-                                line=dict(color="#1877F2", width=2)))
-        fa.add_trace(go.Scatter(x=agg["Date"], y=agg["Reach"], name="Reach",
-                                line=dict(color="#8b5cf6", width=2, dash="dash")))
+        fa.add_trace(go.Scatter(x=agg["Date"], y=agg["Impressions"],
+                                name="Impressions", line=dict(color="#1877F2", width=2)))
+        fa.add_trace(go.Scatter(x=agg["Date"], y=agg["Reach"],
+                                name="Reach", line=dict(color="#8b5cf6", width=2, dash="dash")))
         fa.update_layout(**ch(175))
         st.plotly_chart(fa, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
@@ -506,17 +498,17 @@ elif page == "📈  Trends":
         st.markdown('<div class="sh">🎯 Conversion Funnel</div><div class="sb">',
                     unsafe_allow_html=True)
         fcv = go.Figure()
-        for m,col in [("Conversions","#10b981"),("Appointments","#06b6d4"),
-                      ("Customers","#ec4899")]:
+        for m, col in [("Conversions","#10b981"),("Appointments","#06b6d4"),
+                       ("Customers","#ec4899")]:
             fcv.add_trace(go.Scatter(x=agg["Date"], y=agg[m], name=m,
                                      line=dict(color=col, width=2)))
         fcv.update_layout(**ch(175))
         st.plotly_chart(fcv, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-# ════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 # PAGE 3 — BY TERRITORY
-# ════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 elif page == "🗺️  By Territory":
 
     if "Territory Performance" not in data:
@@ -612,7 +604,8 @@ elif page == "🗺️  By Territory":
     st.markdown('<div class="sh">📊 Campaign Breakdown by Territory</div><div class="sb">',
                 unsafe_allow_html=True)
     tc = raw.copy()
-    if sel_off != "All": tc = tc[tc["Territory"]==sel_off]
+    if sel_off != "All":
+        tc = tc[tc["Territory"]==sel_off]
     pm = st.selectbox("Metric",
                       ["Sales Amount ($)","Unique Leads","Appointments","Customers","Spend ($)"],
                       key="pm", label_visibility="collapsed")
@@ -627,5 +620,3 @@ elif page == "🗺️  By Territory":
                                  y=1.02, xanchor="right", x=1))
     st.plotly_chart(fg, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
-
-st.markdown("</div>", unsafe_allow_html=True)
