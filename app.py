@@ -27,7 +27,10 @@ st.markdown("""
 /* Hide Streamlit default chrome */
 #MainMenu, footer { display:none!important }
 header[data-testid="stHeader"] { display:none!important }
+/* Hide collapse button so sidebar stays open */
 button[data-testid="collapsedControl"] { display:none!important }
+[data-testid="collapsedControl"] { display:none!important }
+section[data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"] { display:none!important }
 
 /* Main content area — no extra padding */
 .block-container {
@@ -98,27 +101,26 @@ button[data-testid="collapsedControl"] { display:none!important }
 [data-testid="stSidebar"] .stRadio input { display:none !important; }
 
 /* KPI cards with gap */
-.krow { display:grid; gap:10px; margin-bottom:16px; }
-.kr4  { grid-template-columns:repeat(4,minmax(0,280px)); }
-.kr3  { grid-template-columns:repeat(3,minmax(0,280px)); }
+.krow { display:grid; gap:8px; margin-bottom:20px; }
+.kr7  { grid-template-columns:repeat(7,1fr); }
 .kcell {
-    background:white; border:1px solid #e5e7eb; border-radius:10px;
-    padding:10px 14px 9px; position:relative;
-    box-shadow:0 1px 4px rgba(0,0,0,0.05);
+    background:white; border:1px solid #e5e7eb; border-radius:8px;
+    padding:10px 12px 8px; position:relative;
+    box-shadow:0 1px 3px rgba(0,0,0,0.05);
 }
 .kcell::before {
     content:""; position:absolute; top:0; left:0; right:0;
-    height:3px; border-radius:10px 10px 0 0;
+    height:3px; border-radius:8px 8px 0 0;
 }
 .c1::before{background:#1877F2} .c2::before{background:#22c55e}
 .c3::before{background:#8b5cf6} .c4::before{background:#10b981}
 .c5::before{background:#f59e0b} .c6::before{background:#ec4899}
 .c7::before{background:#06b6d4}
-.kl { font-size:0.6rem; color:#9ca3af; font-weight:600;
-      text-transform:uppercase; letter-spacing:.07em; margin-bottom:3px; }
-.kv { font-size:1.05rem; font-weight:700; color:#111827; line-height:1.1; margin-bottom:3px; }
-.kp { font-size:0.65rem; color:#10b981; font-weight:600; }
-.kn { font-size:0.65rem; color:#ef4444; font-weight:600; }
+.kl { font-size:0.56rem; color:#9ca3af; font-weight:600;
+      text-transform:uppercase; letter-spacing:.06em; margin-bottom:3px; }
+.kv { font-size:0.95rem; font-weight:700; color:#111827; line-height:1.1; margin-bottom:2px; }
+.kp { font-size:0.6rem; color:#10b981; font-weight:600; }
+.kn { font-size:0.6rem; color:#ef4444; font-weight:600; }
 
 /* Territory strip */
 .tstrip { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:12px; }
@@ -299,18 +301,14 @@ if page == "📊  MTD Overview":
                     f'<div class="kv">{v}</div>{dlt(r["Change %"], pg)}</div>')
 
         st.markdown(
-            '<div class="krow kr4">' +
+            '<div class="krow kr7">' +
             kc("Spend ($)",        "c1", True,  False) +
             kc("Sales Amount ($)", "c2", True,  True)  +
             kc("Clicks",           "c3", False, True)  +
             kc("Conversions",      "c4", False, True)  +
-            '</div>', unsafe_allow_html=True)
-
-        st.markdown(
-            '<div class="krow kr3">' +
-            kc("CRM Leads",    "c5", False, True) +
-            kc("Appointments", "c6", False, True) +
-            kc("Customers",    "c7", False, True) +
+            kc("CRM Leads",        "c5", False, True)  +
+            kc("Appointments",     "c6", False, True)  +
+            kc("Customers",        "c7", False, True)  +
             '</div>', unsafe_allow_html=True)
 
     if "Campaign Performance" in data:
