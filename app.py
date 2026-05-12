@@ -41,13 +41,13 @@ button[data-testid="collapsedControl"]{display:none!important}
 /* Nav buttons */
 [data-testid="stVerticalBlock"] .stButton > button {
   background: transparent !important; border: none !important;
-  color: #8a9bc0 !important; font-size: 0.85rem !important;
+  color: white !important; font-size: 0.88rem !important;
   font-weight: 500 !important; text-align: left !important;
-  padding: 9px 12px !important; border-radius: 7px !important;
+  padding: 10px 12px !important; border-radius: 7px !important;
   width: 100% !important; box-shadow: none !important;
 }
 [data-testid="stVerticalBlock"] .stButton > button:hover {
-  background: rgba(255,255,255,0.08) !important; color: #dde3f5 !important;
+  background: rgba(255,255,255,0.1) !important; color: white !important;
 }
 
 /* KPI row — 7 cards, equal width, with gaps */
@@ -87,11 +87,27 @@ button[data-testid="collapsedControl"]{display:none!important}
 div[data-testid="stVerticalBlock"]>div{gap:0!important}
 .element-container{margin-bottom:0!important}
 .stPlotlyChart{margin:0!important;padding:0!important}
-/* Nav column dark background */
+/* Nav column black background */
 div[data-testid="column"]:first-child {
-  background:#1a1e3c !important;
+  background:#111111 !important;
   padding:14px 8px 20px !important;
   min-height:calc(100vh - 50px);
+}
+/* White text for all nav column elements */
+div[data-testid="column"]:first-child label,
+div[data-testid="column"]:first-child p,
+div[data-testid="column"]:first-child span,
+div[data-testid="column"]:first-child div {
+  color: white !important;
+}
+div[data-testid="column"]:first-child .stSelectbox > div > div,
+div[data-testid="column"]:first-child input {
+  color: white !important;
+  background: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.15) !important;
+}
+div[data-testid="column"]:first-child hr {
+  border-color: rgba(255,255,255,0.12) !important;
 }
 /* Content column light background */
 div[data-testid="column"]:last-child {
@@ -169,7 +185,7 @@ with nav_col:
 
     # VIEWS section
     st.markdown(
-        "<div style='font-size:0.65rem;color:#4a5880;font-weight:700;"
+        "<div style='font-size:0.65rem;color:#aaaaaa;font-weight:700;"
         "text-transform:uppercase;letter-spacing:0.1em;"
         "padding:6px 16px 4px'>VIEWS</div>",
         unsafe_allow_html=True)
@@ -184,7 +200,7 @@ with nav_col:
         # Use colored container for active state
         if active:
             st.markdown(
-                f"<div style='background:#1877F2;border-radius:7px;margin:1px 8px;"
+                f"<div style='background:#1877F2;border-radius:7px;margin:2px 6px;"
                 f"padding:9px 14px;color:white;font-size:0.85rem;font-weight:600;"
                 f"cursor:pointer'>{icon}&nbsp;&nbsp;{label}</div>",
                 unsafe_allow_html=True)
@@ -200,7 +216,7 @@ with nav_col:
 
     # FILTERS section
     st.markdown(
-        "<div style='font-size:0.65rem;color:#4a5880;font-weight:700;"
+        "<div style='font-size:0.65rem;color:#aaaaaa;font-weight:700;"
         "text-transform:uppercase;letter-spacing:0.1em;"
         "padding:0 16px 6px'>FILTERS</div>",
         unsafe_allow_html=True)
