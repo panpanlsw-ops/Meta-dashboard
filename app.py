@@ -5,11 +5,11 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 st.set_page_config(page_title="Meta Ads Dashboard", page_icon="📊",
-                   layout="wide", initial_sidebar_state="collapsed")
+                   layout="wide", initial_sidebar_state="expanded")
 
 LS_B64 = "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"
 
-META_ICON = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 24" height="18" style="vertical-align:middle">
+META_ICON = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 24" height="16" style="vertical-align:middle">
 <path d="M2 12C2 7.2 5.2 3 9.2 3c2.2 0 4.2 1.2 5.8 3.3C16.6 4.2 18.6 3 20.6 3
 c4 0 7.2 4.2 7.2 9 0 2.5-.8 4.8-2.1 6.4-1.2 1.4-2.7 2.2-4.3 2.2
 -2 0-3.6-1-5.6-3.9-2 2.9-3.6 3.9-5.6 3.9-1.6 0-3.1-.8-4.3-2.2
@@ -20,148 +20,232 @@ c1.4 0 2.6-.8 4.2-3.4-1.6-2.8-2.8-4.6-4.2-4.6zm11.4 0c-1.4 0-2.6 1.8-4.2 4.6
 
 st.markdown("""
 <style>
-#MainMenu,footer{display:none!important}
-header[data-testid="stHeader"]{display:none!important}
-section[data-testid="stSidebar"]{display:none!important}
-.block-container{padding:0!important;max-width:100%!important}
-.topbar{background:#1877F2;height:44px;display:flex;align-items:center;padding:0 16px;gap:0}
-.tb-brand{display:flex;align-items:center;gap:6px;margin-right:10px}
-.tb-name{color:white;font-weight:700;font-size:0.88rem}
-.tb-sep{width:1px;height:22px;background:rgba(255,255,255,0.3);margin:0 12px}
-.tb-title{color:white;font-size:0.82rem;font-weight:600}
-.tb-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-.tb-date{color:rgba(255,255,255,0.8);font-size:0.75rem}
-.tb-ls{background:white;border-radius:4px;padding:2px 7px;display:flex;align-items:center}
-.krow{display:grid;gap:0;background:white;border:1px solid #e5e7eb;border-radius:7px;overflow:hidden;margin-bottom:5px}
-.kr4{grid-template-columns:repeat(4,1fr)}
-.kr3{grid-template-columns:repeat(3,1fr)}
-.kcell{padding:8px 14px 6px;border-right:1px solid #e5e7eb;position:relative}
-.kcell:last-child{border-right:none}
-.kcell::before{content:"";position:absolute;top:0;left:0;right:0;height:3px}
-.c1::before{background:#1877F2}.c2::before{background:#8b5cf6}
-.c3::before{background:#10b981}.c4::before{background:#f59e0b}
-.c5::before{background:#06b6d4}.c6::before{background:#ec4899}
-.c7::before{background:#22c55e}
-.kl{font-size:0.6rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
-.kv{font-size:1.1rem;font-weight:700;color:#111827;line-height:1.1;margin-bottom:1px}
-.kp{font-size:0.63rem;color:#10b981;font-weight:600}
-.kn{font-size:0.63rem;color:#ef4444;font-weight:600}
-.tstrip{display:grid;grid-template-columns:repeat(5,1fr);gap:0;background:white;border:1px solid #e5e7eb;border-radius:7px;overflow:hidden;margin-bottom:7px}
-.tcell{padding:8px 10px 6px;border-right:1px solid #e5e7eb;text-align:center}
-.tcell:last-child{border-right:none}
-.ttop{display:block;height:3px;margin-bottom:5px}
-.tl{font-size:0.6rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
-.tv{font-size:1.05rem;font-weight:700;color:#111827}
-.sh{background:#1877F2;color:white;padding:5px 12px;border-radius:5px 5px 0 0;font-weight:600;font-size:0.75rem;display:flex;align-items:center;gap:4px}
-.sb{background:white;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 5px 5px;padding:8px;margin-bottom:7px}
-div[data-testid="stVerticalBlock"]>div{gap:0!important}
-.element-container,.stPlotlyChart{margin:0!important;padding:0!important}
-div[data-testid="column"]{padding:0 3px!important}
+/* ── Reset chrome ── */
+#MainMenu, footer { display:none!important }
+header[data-testid="stHeader"] { display:none!important }
+.block-container { padding: 0 !important; max-width: 100% !important }
+
+/* ── Sidebar dark theme ── */
+section[data-testid="stSidebar"] {
+    background: #1a1e3c !important;
+    min-width: 220px !important;
+    max-width: 220px !important;
+}
+section[data-testid="stSidebar"] * { color: #c8d0e8 !important }
+section[data-testid="stSidebar"] .stSelectbox > label,
+section[data-testid="stSidebar"] .stDateInput > label,
+section[data-testid="stSidebar"] .stFileUploader > label { 
+    font-size: 0.7rem !important; color: #6b7db0 !important;
+    text-transform: uppercase; letter-spacing: 0.06em;
+}
+section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.1) !important }
+section[data-testid="stSidebar"] p { color: #6b7db0 !important; font-size: 0.68rem !important;
+    text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ── Top bar ── */
+.topbar {
+    background: #1877F2; height: 44px;
+    display: flex; align-items: center; padding: 0 16px; gap: 0;
+    position: sticky; top: 0; z-index: 999;
+}
+.tb-brand { display:flex; align-items:center; gap:6px; }
+.tb-name  { color:white; font-weight:700; font-size:0.9rem; }
+.tb-sep   { width:1px; height:22px; background:rgba(255,255,255,0.3); margin:0 14px; }
+.tb-title { color:white; font-size:0.82rem; font-weight:600; }
+.tb-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
+.tb-date  { color:rgba(255,255,255,0.8); font-size:0.75rem; }
+.tb-ls    { background:white; border-radius:4px; padding:2px 7px; display:flex; align-items:center; }
+
+/* ── Tab bar override — match mockup style ── */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 4px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 6px 12px 0;
+}
+.stTabs [data-baseweb="tab"] {
+    height: 34px;
+    padding: 0 16px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border-radius: 6px 6px 0 0;
+    background: #f4f6fb;
+    border: 1px solid #e5e7eb;
+    border-bottom: none;
+    color: #6b7280;
+}
+.stTabs [aria-selected="true"] {
+    background: #1877F2 !important;
+    color: white !important;
+    border-color: #1877F2 !important;
+}
+.stTabs [data-baseweb="tab-panel"] { padding: 10px 14px 0 !important }
+
+/* ── KPI cards ── */
+.krow { display:grid; gap:0; background:white; border:1px solid #e5e7eb;
+        border-radius:7px; overflow:hidden; margin-bottom:6px; }
+.kr4  { grid-template-columns: repeat(4,1fr); }
+.kr3  { grid-template-columns: repeat(3,1fr); }
+.kcell { padding:9px 16px 7px; border-right:1px solid #e5e7eb; position:relative; }
+.kcell:last-child { border-right:none; }
+.kcell::before { content:""; position:absolute; top:0; left:0; right:0; height:3px; }
+.c1::before{background:#1877F2} .c2::before{background:#22c55e}
+.c3::before{background:#8b5cf6} .c4::before{background:#10b981}
+.c5::before{background:#f59e0b} .c6::before{background:#ec4899}
+.c7::before{background:#06b6d4}
+.kl { font-size:0.62rem; color:#9ca3af; font-weight:600; text-transform:uppercase;
+      letter-spacing:.07em; margin-bottom:2px; }
+.kv { font-size:1.2rem; font-weight:700; color:#111827; line-height:1.15; margin-bottom:2px; }
+.kp { font-size:0.65rem; color:#10b981; font-weight:600; }
+.kn { font-size:0.65rem; color:#ef4444; font-weight:600; }
+
+/* ── Territory KPI strip ── */
+.tstrip { display:grid; grid-template-columns:repeat(5,1fr); gap:0;
+          background:white; border:1px solid #e5e7eb; border-radius:7px;
+          overflow:hidden; margin-bottom:8px; }
+.tcell  { padding:10px 12px 8px; border-right:1px solid #e5e7eb; text-align:center; }
+.tcell:last-child { border-right:none; }
+.ttop { display:block; height:3px; margin-bottom:6px; }
+.tl   { font-size:0.62rem; color:#9ca3af; font-weight:600; text-transform:uppercase;
+        letter-spacing:.06em; margin-bottom:4px; }
+.tv   { font-size:1.1rem; font-weight:700; color:#111827; }
+
+/* ── Section cards ── */
+.sh { background:#1877F2; color:white; padding:6px 12px; border-radius:6px 6px 0 0;
+      font-weight:600; font-size:0.78rem; display:flex; align-items:center; gap:5px; }
+.sb { background:white; border:1px solid #e5e7eb; border-top:none;
+      border-radius:0 0 6px 6px; padding:10px; margin-bottom:8px; }
+
+/* ── Campaign pills ── */
+div[data-testid="stHorizontalBlock"] > div { padding: 0 2px !important; }
+
+/* ── Tighten spacing ── */
+div[data-testid="stVerticalBlock"] > div { gap: 0 !important; }
+.element-container { margin-bottom: 0 !important; }
+.stPlotlyChart { margin:0 !important; padding:0 !important; }
 </style>
 """, unsafe_allow_html=True)
 
+# ── Helpers ─────────────────────────────────────────────────────────────────
 COLORS = ["#1877F2","#10b981","#f59e0b","#8b5cf6","#ef4444",
           "#06b6d4","#f97316","#ec4899","#22c55e","#a78bfa","#fb923c","#34d399"]
 
 def fn(n):
     if pd.isna(n): return "—"
-    if abs(n)>=1_000_000: return f"{n/1e6:.1f}M"
-    if abs(n)>=1_000: return f"{n/1e3:.1f}K"
+    if abs(n) >= 1_000_000: return f"{n/1e6:.1f}M"
+    if abs(n) >= 1_000: return f"{n/1e3:.1f}K"
     return f"{n:,.0f}"
 
 def fc(n):
-    if pd.isna(n) or n==0: return "$0"
-    if abs(n)>=1_000_000: return f"${n/1e6:.1f}M"
-    if abs(n)>=1_000: return f"${n/1e3:.1f}K"
+    if pd.isna(n) or n == 0: return "$0"
+    if abs(n) >= 1_000_000: return f"${n/1e6:.1f}M"
+    if abs(n) >= 1_000: return f"${n/1e3:.1f}K"
     return f"${n:,.0f}"
 
 def dlt(v, pg=True):
     if pd.isna(v): return ""
-    a = "▲" if v>0 else "▼"
-    c = ("kp" if v>0 else "kn") if pg else ("kn" if v>0 else "kp")
-    return f'<span class="{c}">{a} {abs(v):.1f}%</span>'
+    arrow = "▲" if v > 0 else "▼"
+    cls = ("kp" if v > 0 else "kn") if pg else ("kn" if v > 0 else "kp")
+    return f'<span class="{cls}">{arrow} {abs(v):.1f}% vs last month</span>'
 
 @st.cache_data
 def load_data(f):
     xls = pd.ExcelFile(f)
     return {n: pd.read_excel(xls, sheet_name=n) for n in xls.sheet_names}
 
-def ch(h=190):
-    return dict(
-        height=h, margin=dict(t=6,b=28,l=48,r=8),
-        paper_bgcolor="white", plot_bgcolor="white",
-        xaxis=dict(showgrid=False, tickformat="%b %d"),
-        yaxis=dict(showgrid=True, gridcolor="#f3f4f6"),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        hovermode="x unified"
-    )
+def ch(h=200):
+    return dict(height=h, margin=dict(t=6,b=30,l=48,r=8),
+                paper_bgcolor="white", plot_bgcolor="white",
+                xaxis=dict(showgrid=False, tickformat="%b %d"),
+                yaxis=dict(showgrid=True, gridcolor="#f3f4f6"),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02,
+                            xanchor="right", x=1),
+                hovermode="x unified")
 
-for k,v in [("tab","overview"),("t1c","All Campaigns"),("gran","Daily")]:
-    if k not in st.session_state:
-        st.session_state[k] = v
+# ── Session state ────────────────────────────────────────────────────────────
+if "t1c" not in st.session_state: st.session_state.t1c = "All Campaigns"
+if "gran" not in st.session_state: st.session_state.gran = "Daily"
 
-try:
-    data = load_data("meta_ads_data.xlsx")
-except Exception:
-    data = {}
+# ── Load data ────────────────────────────────────────────────────────────────
+try:    data = load_data("meta_ads_data.xlsx")
+except: data = {}
 
-TABS = {"overview":"MTD Overview","trends":"Trends","territory":"By Territory"}
+# ── SIDEBAR ──────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown(f"""
+    <div style="padding:14px 0 12px;border-bottom:1px solid rgba(255,255,255,0.1);
+                display:flex;flex-direction:column;align-items:center;gap:8px">
+      <img src="data:image/png;base64,{LS_B64}" height="32" style="object-fit:contain">
+      <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);
+                  border-radius:6px;padding:4px 10px">
+        {META_ICON}
+        <span style="color:white;font-size:0.8rem;font-weight:600">Meta Ads</span>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    st.markdown("Filters")
+    st.markdown("<div style='height:2px'></div>", unsafe_allow_html=True)
+
+    camp_list = ["All Campaigns"]
+    if "Campaign Performance" in data:
+        camp_list += list(data["Campaign Performance"]["Campaign Objective"].unique())
+    sel_camp = st.selectbox("Campaign", camp_list)
+
+    off_list = ["All"]
+    if "Territory Performance" in data:
+        off_list += sorted(data["Territory Performance"]["Territory"].unique().tolist())
+    sel_off = st.selectbox("Office / Territory", off_list)
+
+    date_range = None
+    if "Daily Performance" in data:
+        dr = data["Daily Performance"].copy()
+        dr["Date"] = pd.to_datetime(dr["Date"])
+        mn, mx = dr["Date"].min().date(), dr["Date"].max().date()
+        date_range = st.date_input("Date range", value=(mn, mx),
+                                   min_value=mn, max_value=mx)
+
+    st.markdown("---")
+    up = st.file_uploader("Upload Excel", type=["xlsx", "xls"])
+    if up:
+        data = load_data(up); st.rerun()
+
+    if "Daily Performance" in data:
+        csv = data["Daily Performance"].to_csv(index=False).encode()
+        st.download_button("⬇ Export CSV", csv, "meta_data.csv", "text/csv",
+                           use_container_width=True)
+
+    st.markdown("---")
+    st.markdown("Views")
+    st.caption("Use the tabs on the right →")
+
+# ── TOP BAR ───────────────────────────────────────────────────────────────────
 st.markdown(f"""
 <div class="topbar">
-  <div class="tb-brand">{META_ICON}<span class="tb-name">Meta</span></div>
+  <div class="tb-brand">{META_ICON}
+    <span class="tb-name">Meta Ads</span>
+  </div>
   <div class="tb-sep"></div>
-  <span class="tb-title">{TABS[st.session_state.tab]}</span>
+  <span class="tb-title">Dashboard</span>
   <div class="tb-right">
     <span class="tb-date">Dec 2024</span>
-    <div class="tb-ls"><img src="data:image/png;base64,{LS_B64}" height="19" style="object-fit:contain"></div>
+    <div class="tb-ls">
+      <img src="data:image/png;base64,{LS_B64}" height="20" style="object-fit:contain">
+    </div>
   </div>
-</div>""", unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
-# ── ONE ROW: tabs + filters ────────────────────────────────────────────────────
-c1,c2,c3,_sp,c4,c5,c6,c7 = st.columns([1.1,0.9,1.1,0.2,2,2,2.5,0.9])
+# ── TABS ──────────────────────────────────────────────────────────────────────
+tab1, tab2, tab3 = st.tabs(["📊  Tab 1 — MTD Overview",
+                             "📈  Tab 2 — Trends",
+                             "🗺️  Tab 3 — By Territory"])
 
-with c1:
-    if st.button("📊 MTD Overview", use_container_width=True, key="b1",
-                 type="primary" if st.session_state.tab=="overview" else "secondary"):
-        st.session_state.tab="overview"; st.rerun()
-with c2:
-    if st.button("📈 Trends", use_container_width=True, key="b2",
-                 type="primary" if st.session_state.tab=="trends" else "secondary"):
-        st.session_state.tab="trends"; st.rerun()
-with c3:
-    if st.button("🗺️ By Territory", use_container_width=True, key="b3",
-                 type="primary" if st.session_state.tab=="territory" else "secondary"):
-        st.session_state.tab="territory"; st.rerun()
-
-camp_list = ["All Campaigns"]
-if "Campaign Performance" in data:
-    camp_list += list(data["Campaign Performance"]["Campaign Objective"].unique())
-sel_camp = c4.selectbox("Campaign", camp_list, label_visibility="collapsed")
-
-off_list = ["All Offices"]
-if "Territory Performance" in data:
-    off_list += sorted(data["Territory Performance"]["Territory"].unique().tolist())
-sel_off = c5.selectbox("Office", off_list, label_visibility="collapsed")
-
-date_range = None
-if "Daily Performance" in data:
-    dr = data["Daily Performance"].copy()
-    dr["Date"] = pd.to_datetime(dr["Date"])
-    mn, mx = dr["Date"].min().date(), dr["Date"].max().date()
-    date_range = c6.date_input("Date", value=(mn,mx), min_value=mn, max_value=mx,
-                               label_visibility="collapsed")
-
-up = c7.file_uploader("", type=["xlsx","xls"], label_visibility="collapsed")
-if up:
-    data = load_data(up); st.rerun()
-
-st.markdown("<hr style='margin:2px 0 5px;border-color:#e5e7eb'>", unsafe_allow_html=True)
-
-# ══════════════════════════════════════════════════════════════════
+# ═════════════════════════════════════════════════════════════
 # TAB 1 — MTD OVERVIEW
-# ══════════════════════════════════════════════════════════════════
-if st.session_state.tab == "overview":
+# ═════════════════════════════════════════════════════════════
+with tab1:
 
     if "Overview" in data:
         ov = data["Overview"].set_index("Metric")
@@ -174,28 +258,41 @@ if st.session_state.tab == "overview":
             return (f'<div class="kcell {cls}"><div class="kl">{m}</div>'
                     f'<div class="kv">{v}</div>{dlt(r["Change %"], pg)}</div>')
 
+        # Row 1: Spend · Sales Amount · Clicks · Conversions
         st.markdown(
             '<div class="krow kr4">' +
-            kc("Spend ($)","c1",True,False) + kc("Clicks","c2") +
-            kc("Conversions","c3") + kc("CRM Leads","c4") +
+            kc("Spend ($)",        "c1", True, False) +
+            kc("Sales Amount ($)", "c2", True, True)  +
+            kc("Clicks",           "c3", False, True) +
+            kc("Conversions",      "c4", False, True) +
             '</div>', unsafe_allow_html=True)
+
+        # Row 2: CRM Leads · Appointments · Customers
         st.markdown(
             '<div class="krow kr3">' +
-            kc("Appointments","c5") + kc("Customers","c6") +
-            kc("Sales Amount ($)","c7",True) +
+            kc("CRM Leads",    "c5", False, True) +
+            kc("Appointments", "c6", False, True) +
+            kc("Customers",    "c7", False, True) +
             '</div>', unsafe_allow_html=True)
+
+    st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
 
     if "Campaign Performance" in data:
         camp_df = data["Campaign Performance"].copy()
         opts = ["All Campaigns"] + list(camp_df["Campaign Objective"].unique())
+
+        st.markdown("<div style='font-size:0.75rem;color:#6b7280;margin-bottom:4px'>Select campaign to drill down:</div>",
+                    unsafe_allow_html=True)
         bc = st.columns(len(opts))
         for i, lb in enumerate(opts):
             if bc[i].button(lb, key=f"cp{i}", use_container_width=True,
-                            type="primary" if st.session_state.t1c==lb else "secondary"):
+                            type="primary" if st.session_state.t1c == lb else "secondary"):
                 st.session_state.t1c = lb; st.rerun()
 
         sel = st.session_state.t1c
-        fd = camp_df if sel=="All Campaigns" else camp_df[camp_df["Campaign Objective"]==sel]
+        fd  = camp_df if sel == "All Campaigns" else camp_df[camp_df["Campaign Objective"] == sel]
+
+        st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
 
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -204,32 +301,35 @@ if st.session_state.tab == "overview":
                          hole=0.42, color_discrete_sequence=COLORS)
             fig.update_traces(textposition="inside", textinfo="percent",
                               hovertemplate="<b>%{label}</b><br>$%{value:,.0f}<extra></extra>")
-            fig.update_layout(height=195, margin=dict(t=0,b=0,l=0,r=0),
+            fig.update_layout(height=210, margin=dict(t=0,b=0,l=0,r=0),
                               paper_bgcolor="white", legend=dict(font=dict(size=9)))
             st.plotly_chart(fig, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
         with col2:
             st.markdown('<div class="sh">👥 CRM Leads by Campaign</div><div class="sb">', unsafe_allow_html=True)
-            ld = camp_df[camp_df["CRM Leads"]>0].sort_values("CRM Leads")
+            ld = camp_df[camp_df["CRM Leads"] > 0].sort_values("CRM Leads")
             f2 = px.bar(ld, x="CRM Leads", y="Campaign Objective", orientation="h",
                         color="Campaign Objective", color_discrete_sequence=COLORS, text="CRM Leads")
             f2.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
-            f2.update_layout(height=195, margin=dict(t=0,b=0,l=0,r=45), showlegend=False,
+            f2.update_layout(height=210, margin=dict(t=0,b=0,l=0,r=45), showlegend=False,
                              paper_bgcolor="white", plot_bgcolor="white",
-                             xaxis=dict(showgrid=False,visible=False), yaxis=dict(showgrid=False))
+                             xaxis=dict(showgrid=False, visible=False),
+                             yaxis=dict(showgrid=False))
             st.plotly_chart(f2, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
         with col3:
             st.markdown('<div class="sh">💰 Sales by Campaign</div><div class="sb">', unsafe_allow_html=True)
-            sd = camp_df[camp_df["Sales Amount ($)"]>0].sort_values("Sales Amount ($)")
+            sd = camp_df[camp_df["Sales Amount ($)"] > 0].sort_values("Sales Amount ($)")
             f3 = px.bar(sd, x="Sales Amount ($)", y="Campaign Objective", orientation="h",
-                        color="Campaign Objective", color_discrete_sequence=COLORS, text="Sales Amount ($)")
+                        color="Campaign Objective", color_discrete_sequence=COLORS,
+                        text="Sales Amount ($)")
             f3.update_traces(texttemplate="$%{text:,.0f}", textposition="outside")
-            f3.update_layout(height=195, margin=dict(t=0,b=0,l=0,r=65), showlegend=False,
+            f3.update_layout(height=210, margin=dict(t=0,b=0,l=0,r=65), showlegend=False,
                              paper_bgcolor="white", plot_bgcolor="white",
-                             xaxis=dict(showgrid=False,visible=False), yaxis=dict(showgrid=False))
+                             xaxis=dict(showgrid=False, visible=False),
+                             yaxis=dict(showgrid=False))
             st.plotly_chart(f3, use_container_width=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
@@ -241,30 +341,30 @@ if st.session_state.tab == "overview":
         tb["Spend ($)"]        = tb["Spend ($)"].apply(fc)
         tb["Impressions"]      = tb["Impressions"].apply(fn)
         tb["Clicks"]           = tb["Clicks"].apply(fn)
-        tb["CRM Leads"]        = tb["CRM Leads"].apply(lambda x: fn(x) if x>0 else "—")
-        tb["Conversions"]      = tb["Conversions"].apply(lambda x: fn(x) if x>0 else "—")
+        tb["CRM Leads"]        = tb["CRM Leads"].apply(lambda x: fn(x) if x > 0 else "—")
+        tb["Conversions"]      = tb["Conversions"].apply(lambda x: fn(x) if x > 0 else "—")
         tb["Appointments"]     = tb["Appointments"].apply(fn)
-        tb["Customers"]        = tb["Customers"].apply(lambda x: fn(x) if x>0 else "—")
-        tb["Sales Amount ($)"] = tb["Sales Amount ($)"].apply(lambda x: fc(x) if x>0 else "—")
-        tb["ROAS"]             = tb["ROAS"].apply(lambda x: f"{x:.1f}x" if x>0 else "—")
-        st.dataframe(tb, use_container_width=True, hide_index=True, height=155)
+        tb["Customers"]        = tb["Customers"].apply(lambda x: fn(x) if x > 0 else "—")
+        tb["Sales Amount ($)"] = tb["Sales Amount ($)"].apply(lambda x: fc(x) if x > 0 else "—")
+        tb["ROAS"]             = tb["ROAS"].apply(lambda x: f"{x:.1f}x" if x > 0 else "—")
+        st.dataframe(tb, use_container_width=True, hide_index=True, height=160)
         st.markdown("</div>", unsafe_allow_html=True)
 
-# ══════════════════════════════════════════════════════════════════
+# ═════════════════════════════════════════════════════════════
 # TAB 2 — TRENDS
-# ══════════════════════════════════════════════════════════════════
-elif st.session_state.tab == "trends":
+# ═════════════════════════════════════════════════════════════
+with tab2:
 
     if "Daily Performance" not in data:
         st.warning("No Daily Performance sheet found."); st.stop()
 
     daily = data["Daily Performance"].copy()
     daily["Date"] = pd.to_datetime(daily["Date"])
-    if date_range and len(date_range)==2:
-        daily = daily[(daily["Date"]>=pd.Timestamp(date_range[0])) &
-                      (daily["Date"]<=pd.Timestamp(date_range[1]))]
-    if sel_camp!="All Campaigns" and "Campaign" in daily.columns:
-        daily = daily[daily["Campaign"]==sel_camp]
+    if date_range and len(date_range) == 2:
+        daily = daily[(daily["Date"] >= pd.Timestamp(date_range[0])) &
+                      (daily["Date"] <= pd.Timestamp(date_range[1]))]
+    if sel_camp != "All Campaigns" and "Campaign" in daily.columns:
+        daily = daily[daily["Campaign"] == sel_camp]
 
     agg = daily.groupby("Date").agg({
         "Spend ($)":"sum","Impressions":"sum","Reach":"sum","Clicks":"sum",
@@ -272,56 +372,49 @@ elif st.session_state.tab == "trends":
         "Customers":"sum","Sales Amount ($)":"sum","ROAS":"mean"
     }).reset_index()
 
-    # Granularity row
-    ga, gb, gc, gsp = st.columns([1,1,1,7])
-    if ga.button("Daily",   use_container_width=True, key="gd",
-                 type="primary" if st.session_state.gran=="Daily"   else "secondary"):
+    # Granularity + metric toggles in one bar
+    ctrl = st.columns([0.8, 0.8, 0.9, 0.15, 1,1,1,1,1,1,1,1])
+    if ctrl[0].button("Daily",   key="gd", use_container_width=True,
+                      type="primary" if st.session_state.gran=="Daily"   else "secondary"):
         st.session_state.gran="Daily"; st.rerun()
-    if gb.button("Weekly",  use_container_width=True, key="gw",
-                 type="primary" if st.session_state.gran=="Weekly"  else "secondary"):
+    if ctrl[1].button("Weekly",  key="gw", use_container_width=True,
+                      type="primary" if st.session_state.gran=="Weekly"  else "secondary"):
         st.session_state.gran="Weekly"; st.rerun()
-    if gc.button("Monthly", use_container_width=True, key="gm",
-                 type="primary" if st.session_state.gran=="Monthly" else "secondary"):
+    if ctrl[2].button("Monthly", key="gm", use_container_width=True,
+                      type="primary" if st.session_state.gran=="Monthly" else "secondary"):
         st.session_state.gran="Monthly"; st.rerun()
 
-    if st.session_state.gran=="Weekly":  agg = agg.resample("W",  on="Date").sum().reset_index()
-    if st.session_state.gran=="Monthly": agg = agg.resample("ME", on="Date").sum().reset_index()
+    if st.session_state.gran == "Weekly":  agg = agg.resample("W",  on="Date").sum().reset_index()
+    if st.session_state.gran == "Monthly": agg = agg.resample("ME", on="Date").sum().reset_index()
 
-    # Metric toggles — separate row, clearly labelled
-    st.markdown("<div style='background:#f8f9fb;border:1px solid #e5e7eb;border-radius:6px;padding:5px 10px;margin-bottom:6px'>", unsafe_allow_html=True)
-    mopts   = ["Spend ($)","Sales Amount ($)","CRM Leads","Clicks","Conversions","Appointments","Customers","ROAS"]
-    mdefs   = [True,True,True,False,False,False,False,False]
-    mshort  = ["Spend","Sales","Leads","Clicks","Conv.","Appt.","Customers","ROAS"]
-    mcols   = st.columns(8)
-    sel_m   = [m for i,(m,d,s) in enumerate(zip(mopts,mdefs,mshort))
-               if mcols[i].checkbox(s, value=d, key=f"mx{i}")]
-    st.markdown("</div>", unsafe_allow_html=True)
+    mopts  = ["Spend ($)","Sales Amount ($)","CRM Leads","Clicks","Conversions","Appointments","Customers","ROAS"]
+    mshort = ["Spend","Sales","Leads","Clicks","Conv.","Appt.","Customers","ROAS"]
+    mdefs  = [True,True,True,False,False,False,False,False]
+    sel_m  = [m for i,(m,s,d) in enumerate(zip(mopts,mshort,mdefs))
+              if ctrl[i+4].checkbox(s, value=d, key=f"mx{i}")]
 
-    # Main trend chart
     if sel_m:
         st.markdown('<div class="sh">📈 Metrics Over Time</div><div class="sb">', unsafe_allow_html=True)
         fm = go.Figure()
         for m, col in zip(sel_m, COLORS):
             if m not in agg.columns: continue
-            fm.add_trace(go.Scatter(
-                x=agg["Date"], y=agg[m], name=m, mode="lines+markers",
+            fm.add_trace(go.Scatter(x=agg["Date"], y=agg[m], name=m, mode="lines+markers",
                 line=dict(color=col, width=2), marker=dict(size=3),
                 hovertemplate=f"<b>%{{x|%b %d}}</b><br>{m}: %{{y:,.1f}}<extra></extra>"))
-        fm.update_layout(**ch(210))
+        fm.update_layout(**ch(220))
         st.plotly_chart(fm, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
+    else:
+        st.info("Select at least one metric above.")
 
-    # 2×2 chart grid — each clearly distinct
     r1, r2 = st.columns(2)
     with r1:
         st.markdown('<div class="sh">💹 ROAS Trend</div><div class="sb">', unsafe_allow_html=True)
-        fr = go.Figure(go.Scatter(
-            x=agg["Date"], y=agg["ROAS"], mode="lines+markers",
+        fr = go.Figure(go.Scatter(x=agg["Date"], y=agg["ROAS"], mode="lines+markers",
             line=dict(color="#22c55e", width=2), fill="tozeroy",
             fillcolor="rgba(34,197,94,0.07)",
             hovertemplate="ROAS: %{y:.2f}x<extra></extra>"))
-        fr.update_layout(
-            height=175, margin=dict(t=6,b=28,l=42,r=8),
+        fr.update_layout(height=180, margin=dict(t=6,b=28,l=42,r=8),
             paper_bgcolor="white", plot_bgcolor="white",
             xaxis=dict(showgrid=False, tickformat="%b %d"),
             yaxis=dict(showgrid=True, gridcolor="#f3f4f6", ticksuffix="x"))
@@ -331,19 +424,15 @@ elif st.session_state.tab == "trends":
     with r2:
         st.markdown('<div class="sh">💸 Spend vs Sales Amount</div><div class="sb">', unsafe_allow_html=True)
         fsv = make_subplots(specs=[[{"secondary_y": True}]])
-        fsv.add_trace(go.Bar(
-            x=agg["Date"], y=agg["Spend ($)"], name="Spend",
+        fsv.add_trace(go.Bar(x=agg["Date"], y=agg["Spend ($)"], name="Spend",
             marker_color="rgba(24,119,242,0.65)",
             hovertemplate="Spend: $%{y:,.0f}<extra></extra>"), secondary_y=False)
-        fsv.add_trace(go.Scatter(
-            x=agg["Date"], y=agg["Sales Amount ($)"], name="Sales",
+        fsv.add_trace(go.Scatter(x=agg["Date"], y=agg["Sales Amount ($)"], name="Sales",
             line=dict(color="#22c55e", width=2),
             hovertemplate="Sales: $%{y:,.0f}<extra></extra>"), secondary_y=True)
-        fsv.update_layout(
-            height=175, margin=dict(t=6,b=28,l=42,r=42),
+        fsv.update_layout(height=180, margin=dict(t=6,b=28,l=42,r=42),
             paper_bgcolor="white", plot_bgcolor="white",
-            legend=dict(orientation="h", y=1.1),
-            hovermode="x unified",
+            legend=dict(orientation="h", y=1.1), hovermode="x unified",
             xaxis=dict(showgrid=False, tickformat="%b %d"))
         fsv.update_yaxes(showgrid=True, gridcolor="#f3f4f6", secondary_y=False)
         fsv.update_yaxes(showgrid=False, secondary_y=True)
@@ -372,20 +461,18 @@ elif st.session_state.tab == "trends":
         st.plotly_chart(fcv, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-# ══════════════════════════════════════════════════════════════════
+# ═════════════════════════════════════════════════════════════
 # TAB 3 — BY TERRITORY
-# ══════════════════════════════════════════════════════════════════
-elif st.session_state.tab == "territory":
+# ═════════════════════════════════════════════════════════════
+with tab3:
 
     if "Territory Performance" not in data:
         st.warning("No Territory Performance sheet found."); st.stop()
 
     raw = data["Territory Performance"].copy()
-
-    # Campaign filter inside tab
-    t3c_list = ["All Campaigns"] + sorted(raw["Campaign"].unique().tolist())
-    s3 = st.selectbox("Campaign filter", t3c_list, key="t3c", label_visibility="collapsed")
-    tdf = raw if s3=="All Campaigns" else raw[raw["Campaign"]==s3]
+    t3_camps = ["All Campaigns"] + sorted(raw["Campaign"].unique().tolist())
+    s3 = st.selectbox("Campaign", t3_camps, key="t3c", label_visibility="collapsed")
+    tdf = raw if s3 == "All Campaigns" else raw[raw["Campaign"] == s3]
 
     terr = tdf.groupby("Territory").agg({
         "Unique Leads":"sum","New Leads":"sum","Appointments":"sum","Quote":"sum",
@@ -394,20 +481,17 @@ elif st.session_state.tab == "territory":
     }).reset_index()
 
     tot = terr.sum(numeric_only=True)
-    terr["Leads %"]     = (terr["Unique Leads"]     / tot["Unique Leads"]      * 100).round(2)
-    terr["Sales %"]     = (terr["Sales Amount ($)"]  / tot["Sales Amount ($)"]  * 100).round(2)
-    terr["APT/Leads"]   = (terr["Appointments"]      / terr["Unique Leads"].replace(0,1) * 100).round(2)
-    terr["Order/APT"]   = (terr["Customers"]          / terr["Appointments"].replace(0,1) * 100).round(2)
-    terr["Order/Leads"] = (terr["Customers"]          / terr["Unique Leads"].replace(0,1) * 100).round(2)
+    terr["Leads %"]     = (terr["Unique Leads"]    /tot["Unique Leads"]     *100).round(2)
+    terr["Sales %"]     = (terr["Sales Amount ($)"]/tot["Sales Amount ($)"] *100).round(2)
+    terr["APT/Leads"]   = (terr["Appointments"]    /terr["Unique Leads"].replace(0,1)*100).round(2)
+    terr["Order/APT"]   = (terr["Customers"]       /terr["Appointments"].replace(0,1)*100).round(2)
+    terr["Order/Leads"] = (terr["Customers"]       /terr["Unique Leads"].replace(0,1)*100).round(2)
     terr = terr.sort_values("Sales Amount ($)", ascending=False)
 
-    ul  = int(tot["Unique Leads"])
-    apt = int(tot["Appointments"])
-    cu  = int(tot["Customers"])
-    sal = tot["Sales Amount ($)"]
+    ul  = int(tot["Unique Leads"]); apt = int(tot["Appointments"])
+    cu  = int(tot["Customers"]);    sal = tot["Sales Amount ($)"]
     ap  = round(apt/ul*100) if ul else 0
 
-    # KPI strip — same style as screenshot
     st.markdown(f"""
     <div class="tstrip">
       <div class="tcell"><span class="ttop" style="background:#1877F2"></span>
@@ -422,7 +506,6 @@ elif st.session_state.tab == "territory":
         <div class="tl">APT / Leads</div><div class="tv">{ap}%</div></div>
     </div>""", unsafe_allow_html=True)
 
-    # Donut charts side by side
     d1, d2 = st.columns(2)
     with d1:
         st.markdown('<div class="sh">🥧 Leads % of Total</div><div class="sb">', unsafe_allow_html=True)
@@ -430,35 +513,33 @@ elif st.session_state.tab == "territory":
                     hole=0.42, color_discrete_sequence=COLORS)
         fl.update_traces(textposition="inside", textinfo="percent",
                          hovertemplate="<b>%{label}</b><br>%{value:,}<br>%{percent}<extra></extra>")
-        fl.update_layout(height=270, margin=dict(t=5,b=5,l=0,r=0),
+        fl.update_layout(height=280, margin=dict(t=5,b=5,l=0,r=0),
                          paper_bgcolor="white", legend=dict(font=dict(size=9)))
         st.plotly_chart(fl, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
     with d2:
         st.markdown('<div class="sh">💰 Sales Amount % of Total</div><div class="sb">', unsafe_allow_html=True)
-        fs = px.pie(terr[terr["Sales Amount ($)"]>0], values="Sales Amount ($)", names="Territory",
-                    hole=0.42, color_discrete_sequence=COLORS)
+        fs = px.pie(terr[terr["Sales Amount ($)"]>0], values="Sales Amount ($)",
+                    names="Territory", hole=0.42, color_discrete_sequence=COLORS)
         fs.update_traces(textposition="inside", textinfo="percent",
                          hovertemplate="<b>%{label}</b><br>$%{value:,.0f}<br>%{percent}<extra></extra>")
-        fs.update_layout(height=270, margin=dict(t=5,b=5,l=0,r=0),
+        fs.update_layout(height=280, margin=dict(t=5,b=5,l=0,r=0),
                          paper_bgcolor="white", legend=dict(font=dict(size=9)))
         st.plotly_chart(fs, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # Regional table
-    st.markdown('<div class="sh">🏢 Regional Office Performance</div><div class="sb">', unsafe_allow_html=True)
+    st.markdown('<div class="sh">🏢 Regional Office Performance</div><div class="sb">',
+                unsafe_allow_html=True)
     disp = terr[["Territory","Unique Leads","New Leads","Appointments","Quote","Customers",
                  "Sales Amount ($)","NL Customers","NL Sales ($)",
                  "Leads %","Sales %","APT/Leads","Order/APT","Order/Leads"]].copy()
     tr_row = pd.DataFrame([{
-        "Territory":"Total",
-        "Unique Leads":int(tot["Unique Leads"]), "New Leads":int(tot["New Leads"]),
-        "Appointments":int(tot["Appointments"]), "Quote":int(tot["Quote"]),
-        "Customers":int(tot["Customers"]),
-        "Sales Amount ($)":tot["Sales Amount ($)"],
-        "NL Customers":int(tot["NL Customers"]), "NL Sales ($)":tot["NL Sales ($)"],
-        "Leads %":100.0, "Sales %":100.0,
+        "Territory":"Total","Unique Leads":int(tot["Unique Leads"]),
+        "New Leads":int(tot["New Leads"]),"Appointments":int(tot["Appointments"]),
+        "Quote":int(tot["Quote"]),"Customers":int(tot["Customers"]),
+        "Sales Amount ($)":tot["Sales Amount ($)"],"NL Customers":int(tot["NL Customers"]),
+        "NL Sales ($)":tot["NL Sales ($)"],"Leads %":100.0,"Sales %":100.0,
         "APT/Leads":round(tot["Appointments"]/tot["Unique Leads"]*100,2) if tot["Unique Leads"] else 0,
         "Order/APT":round(tot["Customers"]/tot["Appointments"]*100,2) if tot["Appointments"] else 0,
         "Order/Leads":round(tot["Customers"]/tot["Unique Leads"]*100,2) if tot["Unique Leads"] else 0
@@ -475,21 +556,21 @@ elif st.session_state.tab == "territory":
     st.dataframe(disp, use_container_width=True, hide_index=True, height=360)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Campaign breakdown grouped bar
-    st.markdown('<div class="sh">📊 Campaign Breakdown by Territory</div><div class="sb">', unsafe_allow_html=True)
+    st.markdown('<div class="sh">📊 Campaign Breakdown by Territory</div><div class="sb">',
+                unsafe_allow_html=True)
     tc = raw.copy()
-    if sel_off != "All Offices":
-        tc = tc[tc["Territory"]==sel_off]
-    pm = st.selectbox("Metric to compare",
-                      ["Sales Amount ($)","Unique Leads","Appointments","Customers","Spend ($)"],
-                      key="pm", label_visibility="collapsed")
+    if sel_off != "All": tc = tc[tc["Territory"] == sel_off]
+    pm = st.selectbox("Metric", ["Sales Amount ($)","Unique Leads","Appointments",
+                                  "Customers","Spend ($)"], key="pm",
+                       label_visibility="collapsed")
     fg = px.bar(tc.sort_values("Territory"), x="Territory", y=pm,
                 color="Campaign", barmode="group",
                 color_discrete_sequence=COLORS, text_auto=".2s")
-    fg.update_layout(height=260, margin=dict(t=6,b=70,l=50,r=8),
+    fg.update_layout(height=270, margin=dict(t=6,b=70,l=50,r=8),
                      paper_bgcolor="white", plot_bgcolor="white",
                      xaxis=dict(showgrid=False, tickangle=-30),
                      yaxis=dict(showgrid=True, gridcolor="#f3f4f6"),
-                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+                     legend=dict(orientation="h", yanchor="bottom", y=1.02,
+                                 xanchor="right", x=1))
     st.plotly_chart(fg, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
