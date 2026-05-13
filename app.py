@@ -110,38 +110,30 @@ with nav:
     # Black background for this entire column
     st.markdown("""
     <style>
-    /* target ONLY the first column and make it black */
-    [data-testid="stHorizontalBlock"] > div:first-child {
+    /* Nav column — black background, scoped tightly */
+    div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:first-child {
         background-color: #111111 !important;
         min-height: 100vh !important;
-        padding: 0 !important;
+        padding: 0 8px 20px 0 !important;
     }
-    /* white text inside nav column */
-    [data-testid="stHorizontalBlock"] > div:first-child * {
+    /* White text ONLY inside first column */
+    div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:first-child p,
+    div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:first-child label,
+    div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:first-child span {
         color: white !important;
     }
-    [data-testid="stHorizontalBlock"] > div:first-child .stSelectbox label,
-    [data-testid="stHorizontalBlock"] > div:first-child .stDateInput label {
-        color: #aaaaaa !important;
-        font-size: 0.65rem !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.07em !important;
-    }
-    [data-testid="stHorizontalBlock"] > div:first-child hr {
-        border-color: #333333 !important;
-    }
-    /* Nav section labels */
+    /* Nav section label */
     .nav-label {
         font-size: 0.65rem;
-        color: #888888;
+        color: #888888 !important;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
         padding: 12px 16px 4px;
         display: block;
     }
-    /* Inactive nav button */
-    [data-testid="stHorizontalBlock"] > div:first-child .stButton > button {
+    /* Nav buttons in first column only */
+    div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:first-child .stButton > button {
         background: transparent !important;
         border: none !important;
         color: #cccccc !important;
@@ -154,20 +146,23 @@ with nav:
         box-shadow: none !important;
         margin: 1px 0 !important;
     }
-    [data-testid="stHorizontalBlock"] > div:first-child .stButton > button:hover {
+    div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:first-child .stButton > button:hover {
         background: rgba(255,255,255,0.08) !important;
         color: white !important;
     }
-    /* Active nav button (primary type) */
-    [data-testid="stHorizontalBlock"] > div:first-child .stButton > button[kind="primary"] {
+    div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:first-child .stButton > button[kind="primaryFormSubmit"],
+    div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:first-child .stButton > button[kind="primary"] {
         background: #1877F2 !important;
         color: white !important;
         font-weight: 600 !important;
     }
     /* Selectbox in nav */
-    [data-testid="stHorizontalBlock"] > div:first-child [data-baseweb="select"] > div {
+    div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:first-child [data-baseweb="select"] > div {
         background: #222222 !important;
         border-color: #444444 !important;
+    }
+    div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:first-child hr {
+        border-color: #333333 !important;
     }
     </style>
     """, unsafe_allow_html=True)
