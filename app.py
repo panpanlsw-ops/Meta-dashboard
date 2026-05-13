@@ -66,99 +66,58 @@ with nav:
     page_keys = ["overview","trends","territory"]
     labels    = ["📊  MTD Overview","📈  Trends","🗺️  By Territory"]
 
-    # Build nav HTML
-    nav_items_html = ""
-    for key, label in zip(page_keys, labels):
+    camp_display = st.session_state.get("sel_camp", "All")
+    off_display  = st.session_state.get("sel_off", "All")
+
+    # Brand + filters section
+    st.markdown(
+        '<div style="background:#111111;min-height:100vh">' +
+        '<div style="padding:18px 16px 14px;border-bottom:1px solid #2a2a2a;margin-bottom:8px">' +
+        '<div style="display:flex;align-items:center;gap:10px">' +
+        '<div style="background:#1877F2;border-radius:8px;width:34px;height:34px;' +
+        'display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 24" height="16">' +
+        '<path d="M2 12C2 7.2 5.2 3 9.2 3c2.2 0 4.2 1.2 5.8 3.3C16.6 4.2 18.6 3 20.6 3' +
+        'c4 0 7.2 4.2 7.2 9 0 2.5-.8 4.8-2.1 6.4-1.2 1.4-2.7 2.2-4.3 2.2' +
+        '-2 0-3.6-1-5.6-3.9-2 2.9-3.6 3.9-5.6 3.9-1.6 0-3.1-.8-4.3-2.2' +
+        'C2.8 16.8 2 14.5 2 12zm7.2-5.5C6 6.5 4 9 4 12s2 5.5 5.2 5.5' +
+        'c1.4 0 2.6-.8 4.2-3.4-1.6-2.8-2.8-4.6-4.2-4.6zm11.4 0c-1.4 0-2.6 1.8-4.2 4.6' +
+        '1.6 2.6 2.8 3.4 4.2 3.4 3.2 0 5.2-2.5 5.2-5.5s-2-5.5-5.2-5.5z" fill="white"/>' +
+        '</svg></div>' +
+        '<div><div style="color:white;font-size:0.95rem;font-weight:700">Meta Ads</div>' +
+        '<div style="color:#666;font-size:0.72rem">Dashboard</div></div></div></div>' +
+        '<div style="color:#666;font-size:0.62rem;font-weight:700;text-transform:uppercase;' +
+        'letter-spacing:0.1em;padding:4px 16px 8px">FILTERS</div>' +
+        '<div style="margin:0 8px 4px;background:#1e1e1e;border-radius:6px;' +
+        'padding:8px 12px;border:1px solid #2a2a2a">' +
+        '<div style="color:#888;font-size:0.62rem;text-transform:uppercase;margin-bottom:3px">Campaign</div>' +
+        f'<div style="color:white;font-size:0.82rem">{camp_display}</div></div>' +
+        '<div style="margin:0 8px 12px;background:#1e1e1e;border-radius:6px;' +
+        'padding:8px 12px;border:1px solid #2a2a2a">' +
+        '<div style="color:#888;font-size:0.62rem;text-transform:uppercase;margin-bottom:3px">Office</div>' +
+        f'<div style="color:white;font-size:0.82rem">{off_display}</div></div>' +
+        '<div style="border-top:1px solid #2a2a2a;margin:8px 0 12px"></div>' +
+        '<div style="color:#666;font-size:0.62rem;font-weight:700;text-transform:uppercase;' +
+        'letter-spacing:0.1em;padding:0 16px 8px">VIEWS</div></div>',
+        unsafe_allow_html=True)
+
+    # Nav buttons — styled directly as Streamlit buttons
+    for key, label, icon in [("overview","MTD Overview","📊"),
+                              ("trends","Trends","📈"),
+                              ("territory","By Territory","🗺️")]:
         active = st.session_state.page == key
-        bg     = "#1877F2" if active else "transparent"
-        color  = "white"   if active else "#bbbbbb"
-        fw     = "600"     if active else "400"
-        nav_items_html += f"""
-        <div style="background:{bg};color:{color};font-weight:{fw};
-                    font-size:0.88rem;padding:10px 16px;border-radius:8px;
-                    margin:2px 8px;cursor:pointer">
-          {label}
-        </div>"""
-
-    # Filter values for display
-    camp_display = st.session_state.get("sel_camp","All")
-    off_display  = st.session_state.get("sel_off","All")
-
-    st.markdown(f"""
-    <div style="background:#111111;min-height:100vh;padding-bottom:40px">
-
-      <!-- Brand -->
-      <div style="padding:18px 16px 14px;border-bottom:1px solid #2a2a2a;margin-bottom:8px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="background:#1877F2;border-radius:8px;width:34px;height:34px;
-                      display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 24" height="16">
-              <path d="M2 12C2 7.2 5.2 3 9.2 3c2.2 0 4.2 1.2 5.8 3.3C16.6 4.2 18.6 3 20.6 3
-              c4 0 7.2 4.2 7.2 9 0 2.5-.8 4.8-2.1 6.4-1.2 1.4-2.7 2.2-4.3 2.2
-              -2 0-3.6-1-5.6-3.9-2 2.9-3.6 3.9-5.6 3.9-1.6 0-3.1-.8-4.3-2.2
-              C2.8 16.8 2 14.5 2 12zm7.2-5.5C6 6.5 4 9 4 12s2 5.5 5.2 5.5
-              c1.4 0 2.6-.8 4.2-3.4-1.6-2.8-2.8-4.6-4.2-4.6zm11.4 0c-1.4 0-2.6 1.8-4.2 4.6
-              1.6 2.6 2.8 3.4 4.2 3.4 3.2 0 5.2-2.5 5.2-5.5s-2-5.5-5.2-5.5z" fill="white"/>
-            </svg>
-          </div>
-          <div>
-            <div style="color:white;font-size:0.95rem;font-weight:700">Meta Ads</div>
-            <div style="color:#666;font-size:0.72rem">Dashboard</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Filters label -->
-      <div style="color:#666;font-size:0.62rem;font-weight:700;text-transform:uppercase;
-                  letter-spacing:0.1em;padding:4px 16px 8px">FILTERS</div>
-
-      <!-- Filter values (read-only display) -->
-      <div style="margin:0 8px 4px;background:#1e1e1e;border-radius:6px;
-                  padding:8px 12px;border:1px solid #2a2a2a">
-        <div style="color:#888;font-size:0.62rem;text-transform:uppercase;margin-bottom:3px">Campaign</div>
-        <div style="color:white;font-size:0.82rem">{camp_display}</div>
-      </div>
-      <div style="margin:0 8px 12px;background:#1e1e1e;border-radius:6px;
-                  padding:8px 12px;border:1px solid #2a2a2a">
-        <div style="color:#888;font-size:0.62rem;text-transform:uppercase;margin-bottom:3px">Office</div>
-        <div style="color:white;font-size:0.82rem">{off_display}</div>
-      </div>
-
-      <div style="border-top:1px solid #2a2a2a;margin:8px 0 12px"></div>
-
-      <!-- Views label -->
-      <div style="color:#666;font-size:0.62rem;font-weight:700;text-transform:uppercase;
-                  letter-spacing:0.1em;padding:0 16px 8px">VIEWS</div>
-
-      <!-- Nav items -->
-      {nav_items_html}
-
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Hidden buttons for click handling — zero size
-    st.markdown("""
-    <style>
-    .nav-btn-row { display:flex; flex-direction:column; gap:0; margin-top:-2px; }
-    .nav-btn-row .stButton > button {
-        opacity: 0 !important;
-        height: 44px !important;
-        margin: 2px 8px !important;
-        border-radius: 8px !important;
-        border: none !important;
-        position: relative !important;
-        z-index: 10 !important;
-    }
-    </style>
-    <div class="nav-btn-row">
-    """, unsafe_allow_html=True)
-
-    for key, label in zip(page_keys, labels):
-        if st.button(label, key=f"nav_{key}", use_container_width=True):
+        if active:
+            st.markdown(
+                f'<div style="background:#1877F2;color:white;font-weight:600;' +
+                f'font-size:0.88rem;padding:10px 16px;border-radius:8px;' +
+                f'margin:2px 8px 2px;cursor:pointer">{icon}  {label}</div>',
+                unsafe_allow_html=True)
+            # still render button but hidden to allow rerun on same page
+        btn = st.button(f"{icon}  {label}", key=f"nav_{key}", use_container_width=True,
+                        type="primary" if active else "secondary")
+        if btn and not active:
             st.session_state.page = key
             st.rerun()
-
-    st.markdown("</div>", unsafe_allow_html=True)
 
 # ─── MAIN CONTENT ─────────────────────────────────────────────────────────────
 with main:
