@@ -192,26 +192,40 @@ if st.session_state.page == "overview":
 
     if "Overview" in data:
         ov=data["Overview"].set_index("Metric")
-        def kc(m,color,cur=False,pg=True):
+        import calendar
+        from datetime import date as _date
+        _today = _date.today()
+        _days_in_month = calendar.monthrange(_today.year, _today.month)[1]
+        _days_elapsed = max(_today.day - 1, 1)
+        _pct = round(_days_elapsed / _days_in_month * 100)
+
+        def kp(m, color, cur=False):
             if m not in ov.index:
-                return ('<div style="background:white;border:1px solid #e5e7eb;border-radius:10px;' +
-                        'padding:16px 14px 13px;position:relative;box-shadow:0 1px 4px rgba(0,0,0,0.06)">' +
+                return (f'<div style="background:white;border:1px solid #e5e7eb;border-radius:10px;padding:14px 14px 12px;position:relative;overflow:hidden">' +
                         f'<div style="position:absolute;top:0;left:0;right:0;height:4px;border-radius:10px 10px 0 0;background:{color}"></div>' +
-                        f'<div style="font-size:0.65rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">{m}</div>' +
-                        '<div style="font-size:1.35rem;font-weight:700;color:#111827">—</div></div>')
-            r=ov.loc[m]; v=fc(r["Current Period"]) if cur else fn(r["Current Period"])
-            d=dlt(r["Change %"],pg)
-            return ('<div style="background:white;border:1px solid #e5e7eb;border-radius:10px;' +
-                    'padding:16px 14px 13px;position:relative;box-shadow:0 1px 4px rgba(0,0,0,0.06)">' +
+                        f'<div style="font-size:0.58rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">{m}</div>' +
+                        '<div style="font-size:1.3rem;font-weight:500;color:#111827;margin-bottom:8px">—</div></div>')
+            r = ov.loc[m]
+            raw = r["Current Period"]
+            v = fc(raw) if cur else fn(raw)
+            paced = raw / _days_elapsed * _days_in_month
+            pv = fc(paced) if cur else fn(paced)
+            return (f'<div style="background:white;border:1px solid #e5e7eb;border-radius:10px;padding:14px 14px 12px;position:relative;overflow:hidden">' +
                     f'<div style="position:absolute;top:0;left:0;right:0;height:4px;border-radius:10px 10px 0 0;background:{color}"></div>' +
-                    f'<div style="font-size:0.65rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">{m}</div>' +
-                    f'<div style="font-size:1.35rem;font-weight:700;color:#111827;margin-bottom:5px">{v}</div>{d}</div>')
+                    f'<div style="font-size:0.58rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">{m}</div>' +
+                    f'<div style="font-size:1.3rem;font-weight:500;color:#111827;margin-bottom:8px">{v}</div>' +
+                    f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
+                    f'<span style="font-size:0.72rem;font-weight:600;color:#374151">{pv}</span>' +
+                    f'<span style="font-size:0.62rem;color:#9ca3af">{_pct}%</span></div>' +
+                    f'<div style="height:4px;background:#f3f4f6;border-radius:3px;overflow:hidden">' +
+                    f'<div style="height:100%;width:{_pct}%;background:{color};border-radius:3px"></div></div></div>')
+
         st.markdown(
-            '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:26px">'+
-            kc("Spend ($)","#1877F2",True,False)+kc("Sales Amount ($)","#22c55e",True,True)+
-            kc("Clicks","#8b5cf6",False,True)+kc("Conversions","#10b981",False,True)+
-            kc("CRM Leads","#f59e0b",False,True)+kc("Appointments","#ec4899",False,True)+
-            kc("Customers","#06b6d4",False,True)+'</div>', unsafe_allow_html=True)
+            '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:26px">'+
+            kp("Conversions","#1877F2")+kp("CRM Leads","#f59e0b")+
+            kp("Appointments","#06b6d4")+kp("Customers","#ec4899")+
+            kp("Spend ($)","#22c55e",True)+kp("Sales Amount ($)","#8b5cf6",True)+
+            '</div>', unsafe_allow_html=True)
 
     if "Campaign Performance" in data:
         camp_df=data["Campaign Performance"].copy()
