@@ -173,24 +173,19 @@ with st.sidebar:
 # ════════════════════════════════════════════════════════════
 titles = {"overview":"MTD Overview","trends":"Trends","territory":"By Territory"}
 
-# Top bar
-col_bar, col_ls = st.columns([8,1])
-with col_bar:
-    st.markdown(
-        f'<div style="background:#1877F2;padding:11px 20px;border-radius:8px;' +
-        f'display:flex;align-items:center;gap:12px;margin-bottom:18px">' +
-        f'<span style="color:white;font-weight:700;font-size:1rem">Meta Ads</span>' +
-        f'<span style="width:1px;height:20px;background:rgba(255,255,255,0.35);display:inline-block"></span>' +
-        f'<span style="color:white;font-size:0.9rem;font-weight:600">{titles[st.session_state.page]}</span>' +
-        f'<span style="margin-left:auto;color:rgba(255,255,255,0.85);font-size:0.8rem">Dec 2024</span>' +
-        f'</div>', unsafe_allow_html=True)
-with col_ls:
-    st.markdown(
-        f'<div style="background:#1877F2;padding:6px 12px;border-radius:8px;' +
-        f'display:flex;align-items:center;justify-content:center;margin-bottom:18px">' +
-        f'<div style="background:white;border-radius:5px;padding:2px 8px">' +
-        f'<img src="data:image/png;base64,{LS_B64}" height="22" style="display:block;object-fit:contain">' +
-        f'</div></div>', unsafe_allow_html=True)
+# Top bar — Meta Ads brand + LifeSource logo side by side
+st.markdown(
+    f'<div style="background:#1877F2;padding:10px 20px;border-radius:8px;' +
+    f'display:flex;align-items:center;gap:10px;margin-bottom:18px">' +
+    f'<div style="background:white;border-radius:6px;padding:3px 10px;display:flex;align-items:center">' +
+    f'<img src="data:image/png;base64,{LS_B64}" height="24" style="display:block;object-fit:contain">' +
+    f'</div>' +
+    f'<span style="width:1px;height:22px;background:rgba(255,255,255,0.35);display:inline-block"></span>' +
+    f'<span style="color:white;font-weight:700;font-size:1rem">Meta Ads</span>' +
+    f'<span style="width:1px;height:22px;background:rgba(255,255,255,0.35);display:inline-block"></span>' +
+    f'<span style="color:white;font-size:0.9rem;font-weight:600">{titles[st.session_state.page]}</span>' +
+    f'<span style="margin-left:auto;color:rgba(255,255,255,0.85);font-size:0.8rem">Dec 2024</span>' +
+    f'</div>', unsafe_allow_html=True)
 
 # ── PAGE 1 ─────────────────────────────────────────────────────────────────────
 if st.session_state.page == "overview":
@@ -221,16 +216,8 @@ if st.session_state.page == "overview":
     if "Campaign Performance" in data:
         camp_df=data["Campaign Performance"].copy()
         opts=["All Campaigns"]+list(camp_df["Campaign Objective"].unique())
-        st.markdown("<p style='font-size:0.85rem;color:#374151;font-weight:500;margin-bottom:10px'>Select campaign to drill down:</p>",unsafe_allow_html=True)
-        bc=st.columns(len(opts))
-        for i,lb in enumerate(opts):
-            with bc[i]:
-                if st.button(lb,key=f"cp_{i}",use_container_width=True,
-                             type="primary" if st.session_state.t1c==lb else "secondary"):
-                    st.session_state.t1c=lb; st.rerun()
-        sel=st.session_state.t1c
-        fd=camp_df if sel=="All Campaigns" else camp_df[camp_df["Campaign Objective"]==sel]
-        st.markdown("<div style='height:18px'></div>",unsafe_allow_html=True)
+        sel = "All Campaigns"
+        fd  = camp_df
         c1,c2,c3=st.columns(3,gap="medium")
         with c1:
             st.markdown(sh("💸 Spend by Campaign")+sb_o(),unsafe_allow_html=True)
