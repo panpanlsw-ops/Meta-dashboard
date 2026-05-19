@@ -149,11 +149,25 @@ with st.sidebar:
     sel_camp = st.selectbox("Campaign", camp_list)
     sel_off  = st.selectbox("Office / Territory", off_list)
     date_range = None
-    if "Daily Performance" in data:
-        dr=data["Daily Performance"].copy()
-        dr["Date"]=pd.to_datetime(dr["Date"])
-        mn,mx=dr["Date"].min().date(),dr["Date"].max().date()
-        date_range=st.date_input("Date range",value=(mn,mx),min_value=mn,max_value=mx)
+    MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    all_years = []
+    if "Campaign Performance" in data:
+        cp = data["Campaign Performance"]
+        if "Year" in cp.columns:
+            all_years = sorted(cp["Year"].unique().tolist())
+    if not all_years:
+        all_years = [2024, 2025, 2026]
+
+    st.markdown("<p style='color:#888888;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin:6px 0 4px'>From</p>", unsafe_allow_html=True)
+    fc1, fc2 = st.columns(2)
+    from_month = fc1.selectbox("FM", MONTHS, index=0, label_visibility="collapsed", key="from_month")
+    from_year  = fc2.selectbox("FY", all_years, index=0, label_visibility="collapsed", key="from_year")
+    st.markdown("<p style='color:#888888;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin:6px 0 4px'>To</p>", unsafe_allow_html=True)
+    tc1, tc2 = st.columns(2)
+    to_month = tc1.selectbox("TM", MONTHS, index=len(MONTHS)-1, label_visibility="collapsed", key="to_month")
+    to_year  = tc2.selectbox("TY", all_years, index=len(all_years)-1, label_visibility="collapsed", key="to_year")
+    from_m = MONTHS.index(from_month) + 1
+    to_m   = MONTHS.index(to_month) + 1
 
     st.markdown("---")
     st.markdown("**VIEWS**")
@@ -282,11 +296,8 @@ elif st.session_state.page == "territory":
     if sel_off != "All":
         tdf = tdf[tdf["Territory"] == sel_off]
 
-    # Show date range label from sidebar
-    if date_range and len(date_range) == 2:
-        dr_label = f"{date_range[0].strftime('%b %Y')} – {date_range[1].strftime('%b %Y')}"
-    else:
-        dr_label = "All Time"
+    # Show date range label
+    dr_label = f"{from_month} {from_year} – {to_month} {to_year}"
     st.markdown(
         f"<p style='font-size:0.78rem;color:#6b7280;margin-bottom:12px'>Showing: {dr_label}</p>",
         unsafe_allow_html=True)
@@ -445,17 +456,17 @@ elif st.session_state.page == "trends":
 
     if "Campaign Performance" not in data:
         st.warning("No Campaign Performance sheet found."); st.stop()
-    if "Daily Performance" not in data:
-        st.warning("No Daily Performance sheet found."); st.stop()
 
     camp_df = data["Campaign Performance"].copy()
-    daily   = data["Daily Performance"].copy()
-    daily["Date"] = pd.to_datetime(daily["Date"])
 
-    # Apply date filter from sidebar
-    if date_range and len(date_range) == 2:
-        daily = daily[(daily["Date"] >= pd.Timestamp(date_range[0])) &
-                      (daily["Date"] <= pd.Timestamp(date_range[1]))]
+    # Apply Month/Year filter
+    if "Year" in camp_df.columns and "Month" in camp_df.columns:
+        camp_df = camp_df[
+            ((camp_df["Year"] > from_year) |
+             ((camp_df["Year"] == from_year) & (camp_df["Month"] >= from_m))) &
+            ((camp_df["Year"] < to_year) |
+             ((camp_df["Year"] == to_year) & (camp_df["Month"] <= to_m)))
+        ]
 
     # ── Summary table ─────────────────────────────────────────────
 
@@ -506,7 +517,7 @@ elif st.session_state.page == "trends":
     # ── Campaign selector + trend chart ───────────────────────────
 
 
-    # Use campaign from sidebar filter
+    # Campaign filter from sidebar
     sel_trend = sel_camp if sel_camp != "All" else None
 
     metric_opts   = ["Spend ($)","CRM Leads","Conversions","Appointments","Customers","Sales Amount ($)","ROAS"]
@@ -525,36 +536,57 @@ elif st.session_state.page == "trends":
     metric = metric_opts[metric_labels.index(sel_metric_lbl)]
     st.session_state.trend_metric = metric
 
-    # Filter daily data for selected campaign
-    if sel_trend and "Campaign" in daily.columns:
-        camp_daily = daily[daily["Campaign"] == sel_trend].copy()
-    else:
-        camp_daily = daily.copy()
+    # Granularity: Monthly or Yearly
+    g1, g2, _ = st.columns([1, 1, 5])
+    if "trend_gran" not in st.session_state: st.session_state.trend_gran = "Monthly"
+    if g1.button("Monthly", key="tg_m", use_container_width=True,
+                 type="primary" if st.session_state.trend_gran=="Monthly" else "secondary"):
+        st.session_state.trend_gran = "Monthly"; st.rerun()
+    if g2.button("Yearly", key="tg_y", use_container_width=True,
+                 type="primary" if st.session_state.trend_gran=="Yearly" else "secondary"):
+        st.session_state.trend_gran = "Yearly"; st.rerun()
 
-    agg = camp_daily.groupby("Date").agg({
-        "Spend ($)":"sum","CRM Leads":"sum","Conversions":"sum",
-        "Appointments":"sum","Customers":"sum","Sales Amount ($)":"sum","ROAS":"mean"
-    }).reset_index()
+    # Filter by campaign
+    chart_df = camp_df.copy()
+    if sel_trend and "Campaign Objective" in chart_df.columns:
+        chart_df = chart_df[chart_df["Campaign Objective"] == sel_trend]
+
+    # Aggregate
+    if st.session_state.trend_gran == "Monthly" and "Year" in chart_df.columns:
+        agg = chart_df.groupby(["Year","Month"]).agg({
+            "Spend ($)":"sum","CRM Leads":"sum","Conversions":"sum",
+            "Appointments":"sum","Customers":"sum","Sales Amount ($)":"sum","ROAS":"mean"
+        }).reset_index()
+        agg["Period"] = pd.to_datetime(agg.apply(lambda r: f"{int(r['Year'])}-{int(r['Month']):02d}-01", axis=1))
+        x_col = "Period"
+        x_fmt = "%b %Y"
+    else:
+        agg = chart_df.groupby("Year").agg({
+            "Spend ($)":"sum","CRM Leads":"sum","Conversions":"sum",
+            "Appointments":"sum","Customers":"sum","Sales Amount ($)":"sum","ROAS":"mean"
+        }).reset_index()
+        agg["Period"] = agg["Year"].astype(str)
+        x_col = "Period"
+        x_fmt = None
 
     if len(agg) == 0:
-        st.info("No daily data available for this campaign.")
+        st.info("No data available for selected filters.")
     else:
         fig = go.Figure()
         fig.add_trace(go.Scatter(
-            x=agg["Date"], y=agg[metric],
+            x=agg[x_col], y=agg[metric],
             mode="lines+markers",
-            name=sel_trend,
             line=dict(color="#1877F2", width=2),
-            marker=dict(size=4),
+            marker=dict(size=5),
             fill="tozeroy",
             fillcolor="rgba(24,119,242,0.08)",
-            hovertemplate=f"<b>%{{x|%b %d}}</b><br>{metric}: %{{y:,.1f}}<extra></extra>"
+            hovertemplate=f"<b>%{{x}}</b><br>{metric}: %{{y:,.1f}}<extra></extra>"
         ))
         fig.update_layout(
-            height=260,
+            height=280,
             margin=dict(t=10,b=40,l=55,r=20),
             paper_bgcolor="white", plot_bgcolor="white",
-            xaxis=dict(showgrid=False, tickformat="%b %y"),
+            xaxis=dict(showgrid=False),
             yaxis=dict(showgrid=True, gridcolor="#f3f4f6"),
             hovermode="x unified",
             showlegend=False
