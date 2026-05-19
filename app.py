@@ -399,17 +399,48 @@ elif st.session_state.page == "trends":
     sel_trend = st.selectbox("Select campaign", camp_opts, key="trend_camp",
                              label_visibility="collapsed")
 
-    metric_opts = ["Spend ($)","CRM Leads","Conversions","Appointments","Customers","Sales Amount ($)","ROAS"]
+    metric_opts   = ["Spend ($)","CRM Leads","Conversions","Appointments","Customers","Sales Amount ($)","ROAS"]
     metric_labels = ["Spend","Leads","Conversions","APT","Customers","Sales","ROAS"]
 
-    mc = st.columns(len(metric_opts))
     if "trend_metric" not in st.session_state:
         st.session_state.trend_metric = "CRM Leads"
+
+    # Hide the native Streamlit buttons visually
+    st.markdown("""<style>
+    .trend-btns .stButton > button {
+        opacity: 0 !important;
+        height: 36px !important;
+        margin-top: -44px !important;
+        position: relative !important;
+        z-index: 10 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+    </style>""", unsafe_allow_html=True)
+
+    # Visual pill row
+    btn_html = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px">'
+    for m, lbl in zip(metric_opts, metric_labels):
+        active = st.session_state.trend_metric == m
+        bg  = "#1877F2" if active else "white"
+        col = "white"   if active else "#374151"
+        bdr = "#1877F2" if active else "#d1d5db"
+        fw  = "600"     if active else "400"
+        btn_html += (f'<span style="background:{bg};color:{col};border:1px solid {bdr};'
+                     f'font-weight:{fw};font-size:0.82rem;padding:6px 18px;'
+                     f'border-radius:20px">{lbl}</span>')
+    btn_html += '</div>'
+    st.markdown(btn_html, unsafe_allow_html=True)
+
+    # Invisible click buttons overlaid on top
+    st.markdown('<div class="trend-btns">', unsafe_allow_html=True)
+    mc = st.columns(len(metric_opts))
     for i,(m,lbl) in enumerate(zip(metric_opts,metric_labels)):
-        if mc[i].button(lbl, key=f"tm_{i}", use_container_width=True,
-                        type="primary" if st.session_state.trend_metric==m else "secondary"):
+        if mc[i].button(lbl, key=f"tm_{i}", use_container_width=True):
             st.session_state.trend_metric = m
             st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
     metric = st.session_state.trend_metric
 
