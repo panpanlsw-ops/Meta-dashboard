@@ -159,8 +159,8 @@ with st.sidebar:
     st.markdown("**VIEWS**")
 
     for key,icon,label in [("overview","📊","MTD Overview"),
-                            ("trends","📈","Trends"),
-                            ("territory","🗺️","By Territory")]:
+                            ("territory","🗺️","By Territory"),
+                            ("trends","📈","Trends")]:
         active = st.session_state.page == key
         if st.button(f"{icon}  {label}", key=f"nav_{key}",
                      use_container_width=True,
@@ -171,7 +171,7 @@ with st.sidebar:
 # ════════════════════════════════════════════════════════════
 # MAIN CONTENT
 # ════════════════════════════════════════════════════════════
-titles = {"overview":"MTD Overview","trends":"Trends","territory":"By Territory"}
+titles = {"overview":"MTD Overview","territory":"By Territory","trends":"Trends"}
 
 # Top bar — Meta Ads brand + LifeSource logo side by side
 st.markdown(
@@ -256,6 +256,10 @@ if st.session_state.page == "overview":
         st.markdown(sh(f"📋 Campaign Breakdown — {sel}")+sb_o(),unsafe_allow_html=True)
         show=["Campaign Objective","Spend ($)","Impressions","Clicks","CRM Leads","Conversions","Appointments","Customers","Sales Amount ($)","ROAS"]
         tb=fd[[c for c in show if c in fd.columns]].copy()
+        # Compute Cost/APT and APT/Leads before formatting
+        raw = fd.copy()
+        tb["Cost/APT"] = raw.apply(lambda r: fc(r["Spend ($)"]/r["Appointments"]) if pd.notna(r.get("Appointments")) and r["Appointments"]>0 else "—", axis=1)
+        tb["APT/Leads"] = raw.apply(lambda r: f'{r["Appointments"]/r["CRM Leads"]*100:.1f}%' if pd.notna(r.get("CRM Leads")) and r["CRM Leads"]>0 and pd.notna(r.get("Appointments")) and r["Appointments"]>0 else "—", axis=1)
         for col,func in [("Spend ($)",fc),("Impressions",fn),("Clicks",fn)]: tb[col]=tb[col].apply(func)
         for col in ["CRM Leads","Conversions","Customers"]: tb[col]=tb[col].apply(lambda x:fn(x) if x>0 else "—")
         tb["Appointments"]=tb["Appointments"].apply(fn)
@@ -264,7 +268,7 @@ if st.session_state.page == "overview":
         st.dataframe(tb,use_container_width=True,hide_index=True,height=180); st.markdown(sb_c(),unsafe_allow_html=True)
 
 # ── PAGE 2 ─────────────────────────────────────────────────────────────────────
-elif st.session_state.page == "trends":
+elif st.session_state.page == "territory":
     if "Daily Performance" not in data:
         st.warning("No Daily Performance sheet found."); st.stop()
     daily=data["Daily Performance"].copy(); daily["Date"]=pd.to_datetime(daily["Date"])
@@ -321,7 +325,7 @@ elif st.session_state.page == "trends":
         fcv.update_layout(**ch(190)); st.plotly_chart(fcv,use_container_width=True); st.markdown(sb_c(),unsafe_allow_html=True)
 
 # ── PAGE 3 ─────────────────────────────────────────────────────────────────────
-elif st.session_state.page == "territory":
+elif st.session_state.page == "trends":
     if "Territory Performance" not in data:
         st.warning("No Territory Performance sheet found."); st.stop()
     raw=data["Territory Performance"].copy()
