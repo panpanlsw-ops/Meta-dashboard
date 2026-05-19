@@ -535,15 +535,8 @@ elif st.session_state.page == "trends":
     metric = metric_opts[metric_labels.index(sel_metric_lbl)]
     st.session_state.trend_metric = metric
 
-    # Granularity: Monthly or Yearly
-    g1, g2, _ = st.columns([1, 1, 5])
-    if "trend_gran" not in st.session_state: st.session_state.trend_gran = "Monthly"
-    if g1.button("Monthly", key="tg_m", use_container_width=True,
-                 type="primary" if st.session_state.trend_gran=="Monthly" else "secondary"):
-        st.session_state.trend_gran = "Monthly"; st.rerun()
-    if g2.button("Yearly", key="tg_y", use_container_width=True,
-                 type="primary" if st.session_state.trend_gran=="Yearly" else "secondary"):
-        st.session_state.trend_gran = "Yearly"; st.rerun()
+    # Always monthly granularity — date range controlled by sidebar
+    if "trend_gran" not in st.session_state: st.session_state.trend_gran = "Monthly" 
 
     # Filter by campaign from sidebar
     chart_df = camp_df.copy()
