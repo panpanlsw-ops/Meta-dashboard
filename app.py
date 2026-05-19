@@ -429,12 +429,16 @@ elif st.session_state.page == "territory":
     function tog(id){
       var rows=document.querySelectorAll('.'+id+'-camp');
       var arrow=document.getElementById(id+'-a');
-      var open=rows[0]&&rows[0].style.display!=='none';
+      var open=rows[0]&&rows[0].style.display!=='none'&&rows[0].style.display!=='';
       rows.forEach(function(r){r.style.display=open?'none':'table-row';});
-      if(arrow){arrow.style.transform=open?'':'rotate(90deg)';}
+      if(arrow){arrow.style.transform=open?'rotate(0deg)':'rotate(90deg)';}
     }
     </script>"""
-    st.markdown(html, unsafe_allow_html=True)
+    import streamlit.components.v1 as components
+    n_terr = len(terr)
+    n_camp = sum(len(tdf[tdf["Territory"]==r["Territory"]]["Campaign"].unique()) for _,r in terr.iterrows())
+    tbl_height = max(500, (n_terr + 2) * 38 + n_camp * 34)
+    components.html(html, height=tbl_height, scrolling=True)
 
 # ── PAGE 3 ─────────────────────────────────────────────────────────────────────
 elif st.session_state.page == "trends":
