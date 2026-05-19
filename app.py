@@ -368,12 +368,76 @@ elif st.session_state.page == "territory":
         disp[c] = disp[c].apply(lambda x: f"{x:.2f}%")
     disp["Order/APT"] = disp["Order/APT"].apply(lambda x: f"{x:.0f}%")
 
-    disp.columns = [
-        "Regional Office","Unique Leads","New Leads","APT","Quote","Customers",
-        "Sales Amount","NL Customers","NL Sales","Leads %","Sales %",
-        "APT/Leads","Order/APT","Order/Leads"
-    ]
-    st.dataframe(disp, use_container_width=True, hide_index=True, height=420)
+    # ── Expandable territory table with campaign breakdown ─────────
+    # Header row
+    st.markdown("""
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr 1.2fr 1fr 1fr 1fr 1fr;
+                gap:0;background:#111827;border-radius:8px 8px 0 0;padding:8px 12px;
+                font-size:0.65rem;font-weight:600;color:white;text-transform:uppercase;
+                letter-spacing:0.07em;margin-bottom:0">
+      <div>Regional Office</div><div>Unique Leads</div><div>New Leads</div>
+      <div>APT</div><div>Quote</div><div>Customers</div><div>Sales Amount</div>
+      <div>Leads %</div><div>Sales %</div><div>APT/Leads</div><div>Order/APT</div>
+    </div>""", unsafe_allow_html=True)
+
+    # Total row
+    tot_style = "display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr 1.2fr 1fr 1fr 1fr 1fr;gap:0;padding:8px 12px;font-size:0.8rem;font-weight:600;background:#dbeafe;color:#1e3a5f;border-bottom:1px solid #bfdbfe"
+    apt_leads_tot = f"{round(tot['Appointments']/tot['Unique Leads']*100,1)}%" if tot["Unique Leads"] else "—"
+    order_apt_tot = f"{round(tot['Customers']/tot['Appointments']*100,1)}%" if tot["Appointments"] else "—"
+    leads_pct_tot = "100.0%"
+    sales_pct_tot = "100.0%"
+    st.markdown(f"""
+    <div style="{tot_style}">
+      <div>Total</div>
+      <div>{fn(tot["Unique Leads"])}</div><div>{fn(tot["New Leads"])}</div>
+      <div>{fn(tot["Appointments"])}</div><div>{fn(tot["Quote"])}</div>
+      <div>{fn(tot["Customers"])}</div><div>{fc(tot["Sales Amount ($)"])}</div>
+      <div>{leads_pct_tot}</div><div>{sales_pct_tot}</div>
+      <div>{apt_leads_tot}</div><div>{order_apt_tot}</div>
+    </div>""", unsafe_allow_html=True)
+
+    # Each territory as expander
+    row_style = "display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr 1.2fr 1fr 1fr 1fr 1fr;gap:0;padding:7px 12px;font-size:0.8rem;color:#111827;border-bottom:1px solid #f3f4f6"
+    camp_header_style = "display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr 1.2fr;gap:0;padding:6px 12px;font-size:0.68rem;font-weight:600;color:#6b7280;background:#f9fafb;text-transform:uppercase;letter-spacing:0.05em"
+    camp_row_style = "display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr 1.2fr;gap:0;padding:6px 12px;font-size:0.78rem;color:#374151;border-bottom:1px solid #f3f4f6"
+
+    for _, row in terr.iterrows():
+        t = row["Territory"]
+        ul_t  = int(row["Unique Leads"])
+        nl_t  = int(row["New Leads"])
+        ap_t  = int(row["Appointments"])
+        qu_t  = int(row["Quote"])
+        cu_t  = int(row["Customers"])
+        sa_t  = row["Sales Amount ($)"]
+        lp_t  = f"{row['Leads %']:.2f}%"
+        sp_t  = f"{row['Sales %']:.2f}%"
+        al_t  = f"{row['APT/Leads']:.1f}%"
+        oa_t  = f"{row['Order/APT']:.0f}%"
+
+        with st.expander(f"**{t}**  ·  Leads: {ul_t}  ·  APT: {ap_t}  ·  Customers: {cu_t}  ·  Sales: {fc(sa_t)}", expanded=False):
+            # Campaign breakdown for this territory
+            camp_data = tdf[tdf["Territory"] == t].groupby("Campaign").agg({
+                "Unique Leads":"sum","New Leads":"sum","Appointments":"sum",
+                "Quote":"sum","Customers":"sum","Sales Amount ($)":"sum"
+            }).reset_index().sort_values("Sales Amount ($)", ascending=False)
+
+            st.markdown(f"""
+            <div style="{camp_header_style}">
+              <div>Campaign</div><div>Unique Leads</div><div>New Leads</div>
+              <div>APT</div><div>Quote</div><div>Customers</div><div>Sales</div>
+            </div>""", unsafe_allow_html=True)
+
+            for _, cr in camp_data.iterrows():
+                st.markdown(f"""
+                <div style="{camp_row_style}">
+                  <div>{cr["Campaign"]}</div>
+                  <div>{int(cr["Unique Leads"])}</div>
+                  <div>{int(cr["New Leads"])}</div>
+                  <div>{int(cr["Appointments"])}</div>
+                  <div>{int(cr["Quote"])}</div>
+                  <div>{int(cr["Customers"])}</div>
+                  <div>{fc(cr["Sales Amount ($)"])}</div>
+                </div>""", unsafe_allow_html=True)
 
 # ── PAGE 3 ─────────────────────────────────────────────────────────────────────
 elif st.session_state.page == "trends":
