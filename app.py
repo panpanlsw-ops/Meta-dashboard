@@ -552,22 +552,28 @@ elif st.session_state.page == "trends":
         chart_df = chart_df[chart_df["Campaign Objective"] == sel_trend]
 
     # Aggregate
-    if st.session_state.trend_gran == "Monthly" and "Year" in chart_df.columns:
+    has_year  = "Year"  in chart_df.columns and len(chart_df) > 0
+    has_month = "Month" in chart_df.columns and len(chart_df) > 0
+
+    if st.session_state.trend_gran == "Monthly" and has_year and has_month:
         agg = chart_df.groupby(["Year","Month"]).agg({
             "Spend ($)":"sum","CRM Leads":"sum","Conversions":"sum",
             "Appointments":"sum","Customers":"sum","Sales Amount ($)":"sum","ROAS":"mean"
         }).reset_index()
-        agg["Period"] = pd.to_datetime(agg.apply(lambda r: f"{int(r['Year'])}-{int(r['Month']):02d}-01", axis=1))
+        agg["Period"] = pd.to_datetime(
+            agg.apply(lambda r: f"{int(r['Year'])}-{int(r['Month']):02d}-01", axis=1))
         x_col = "Period"
-        x_fmt = "%b %Y"
-    else:
+    elif has_year:
         agg = chart_df.groupby("Year").agg({
             "Spend ($)":"sum","CRM Leads":"sum","Conversions":"sum",
             "Appointments":"sum","Customers":"sum","Sales Amount ($)":"sum","ROAS":"mean"
         }).reset_index()
         agg["Period"] = agg["Year"].astype(str)
         x_col = "Period"
-        x_fmt = None
+    else:
+        st.info("Campaign Performance data does not have Year/Month columns.")
+        agg = pd.DataFrame()
+        x_col = "Period" 
 
     if len(agg) == 0:
         st.info("No data available for selected filters.")
