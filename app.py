@@ -93,7 +93,7 @@ def sb_o():
     return '<div style="background:white;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;padding:14px;margin-bottom:24px">'
 def sb_c(): return "</div>"
 
-@st.cache_data
+@st.cache_data(ttl=0)
 def load_data(f):
     xls=pd.ExcelFile(f)
     return {n:pd.read_excel(xls,sheet_name=n) for n in xls.sheet_names}
@@ -517,22 +517,21 @@ elif st.session_state.page == "trends":
     # ── Campaign selector + trend chart ───────────────────────────
 
 
-    # Campaign filter from sidebar
-    sel_trend = sel_camp if sel_camp != "All" else None
-
     metric_opts   = ["Spend ($)","CRM Leads","Conversions","Appointments","Customers","Sales Amount ($)","ROAS"]
     metric_labels = ["Spend","Leads","Conversions","APT","Customers","Sales","ROAS"]
 
     if "trend_metric" not in st.session_state:
         st.session_state.trend_metric = "CRM Leads"
 
-    m1, _ = st.columns([2, 5])
-    sel_metric_lbl = m1.selectbox(
-        "Metric", metric_labels,
-        index=metric_labels.index(
-            metric_labels[metric_opts.index(st.session_state.trend_metric)]
-            if st.session_state.trend_metric in metric_opts else 1),
-        label_visibility="collapsed", key="trend_metric_sel")
+    metric_col, _ = st.columns([2, 5])
+    with metric_col:
+        sel_metric_lbl = st.selectbox(
+            "Metric", metric_labels,
+            index=metric_labels.index(
+                metric_labels[metric_opts.index(st.session_state.trend_metric)]
+                if st.session_state.trend_metric in metric_opts else 1),
+            label_visibility="visible",
+            key="trend_metric_sel")
     metric = metric_opts[metric_labels.index(sel_metric_lbl)]
     st.session_state.trend_metric = metric
 
@@ -546,10 +545,10 @@ elif st.session_state.page == "trends":
                  type="primary" if st.session_state.trend_gran=="Yearly" else "secondary"):
         st.session_state.trend_gran = "Yearly"; st.rerun()
 
-    # Filter by campaign
+    # Filter by campaign from sidebar
     chart_df = camp_df.copy()
-    if sel_trend and "Campaign Objective" in chart_df.columns:
-        chart_df = chart_df[chart_df["Campaign Objective"] == sel_trend]
+    if sel_camp != "All" and "Campaign Objective" in chart_df.columns:
+        chart_df = chart_df[chart_df["Campaign Objective"] == sel_camp]
 
     # Aggregate
     has_year  = "Year"  in chart_df.columns and len(chart_df) > 0
