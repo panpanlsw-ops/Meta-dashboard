@@ -342,11 +342,7 @@ elif st.session_state.page == "trends":
                       (daily["Date"] <= pd.Timestamp(date_range[1]))]
 
     # ── Summary table ─────────────────────────────────────────────
-    st.markdown(sh("📈 Campaign Trends") + sb_o(), unsafe_allow_html=True)
-    st.markdown(
-        "<p style='font-size:0.78rem;color:#6b7280;margin-bottom:10px'>"
-        "Click any campaign row to see trend chart below.</p>",
-        unsafe_allow_html=True)
+
 
     # Build display table
     tb = camp_df.copy()
@@ -390,10 +386,9 @@ elif st.session_state.page == "trends":
     disp = pd.concat([total_disp, disp], ignore_index=True)
 
     st.dataframe(disp, use_container_width=True, hide_index=True, height=220)
-    st.markdown(sb_c(), unsafe_allow_html=True)
 
     # ── Campaign selector + trend chart ───────────────────────────
-    st.markdown(sh("📊 Campaign Trend Chart") + sb_o(), unsafe_allow_html=True)
+
 
     camp_opts = list(camp_df["Campaign Objective"].unique())
     sel_trend = st.selectbox("Select campaign", camp_opts, key="trend_camp",
@@ -405,40 +400,16 @@ elif st.session_state.page == "trends":
     if "trend_metric" not in st.session_state:
         st.session_state.trend_metric = "CRM Leads"
 
-    # Metric selector using radio styled as pills
-    st.markdown("""<style>
-    div[data-testid="stHorizontalBlock"] .stRadio > div {
-        flex-direction: row !important;
-        flex-wrap: wrap !important;
-        gap: 8px !important;
-    }
-    div[data-testid="stHorizontalBlock"] .stRadio > div > label {
-        background: white !important;
-        border: 1px solid #d1d5db !important;
-        border-radius: 20px !important;
-        padding: 6px 18px !important;
-        font-size: 0.82rem !important;
-        color: #374151 !important;
-        cursor: pointer !important;
-    }
-    div[data-testid="stHorizontalBlock"] .stRadio > div > label:has(input:checked) {
-        background: #1877F2 !important;
-        border-color: #1877F2 !important;
-        color: white !important;
-        font-weight: 600 !important;
-    }
-    div[data-testid="stHorizontalBlock"] .stRadio input { display: none !important; }
-    div[data-testid="stHorizontalBlock"] .stRadio > label { display: none !important; }
-    </style>""", unsafe_allow_html=True)
-
-    sel_metric_lbl = st.radio(
-        "Metric", metric_labels, horizontal=True,
-        index=metric_labels.index(
-            metric_labels[metric_opts.index(st.session_state.trend_metric)]
-            if st.session_state.trend_metric in metric_opts else 1),
-        label_visibility="collapsed", key="trend_metric_radio")
-    metric = metric_opts[metric_labels.index(sel_metric_lbl)]
-    st.session_state.trend_metric = metric
+    c1, c2 = st.columns([2, 5])
+    with c1:
+        sel_metric_lbl = st.selectbox(
+            "Metric", metric_labels,
+            index=metric_labels.index(
+                metric_labels[metric_opts.index(st.session_state.trend_metric)]
+                if st.session_state.trend_metric in metric_opts else 1),
+            label_visibility="collapsed", key="trend_metric_sel")
+        metric = metric_opts[metric_labels.index(sel_metric_lbl)]
+        st.session_state.trend_metric = metric
 
     # Filter daily data for selected campaign
     if "Campaign" in daily.columns:
@@ -475,5 +446,3 @@ elif st.session_state.page == "trends":
             showlegend=False
         )
         st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown(sb_c(), unsafe_allow_html=True)
