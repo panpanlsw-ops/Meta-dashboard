@@ -409,7 +409,7 @@ elif st.session_state.page == "territory":
             c_ord_apt   = cr["Customers"] / cr["Appointments"] * 100 if cr["Appointments"] else 0
             c_ord_leads = cr["Customers"] / cr["Unique Leads"] * 100 if cr["Unique Leads"] else 0
             html += (f'<tr class="{tid}-camp" style="display:none;background:#f5f8ff;border-bottom:1px solid #eff0f6">' +
-                     f'<td style="padding-left:28px;color:#1877F2;font-weight:500;font-size:11.5px">{cr["Campaign"]}</td>' +
+                     f'<td style="padding-left:28px;color:#111827;font-weight:400;font-size:11.5px">{cr["Campaign"]}</td>' +
                      f'<td style="font-size:11.5px">{int(cr["Unique Leads"])}</td>' +
                      f'<td style="font-size:11.5px">{int(cr["New Leads"])}</td>' +
                      f'<td style="font-size:11.5px">{int(cr["Appointments"])}</td>' +
