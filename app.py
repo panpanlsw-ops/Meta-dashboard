@@ -326,54 +326,127 @@ elif st.session_state.page == "territory":
 
 # ── PAGE 3 ─────────────────────────────────────────────────────────────────────
 elif st.session_state.page == "trends":
-    if "Territory Performance" not in data:
-        st.warning("No Territory Performance sheet found."); st.stop()
-    raw=data["Territory Performance"].copy()
-    t3c=["All Campaigns"]+sorted(raw["Campaign"].unique().tolist())
-    s3=st.selectbox("Campaign",t3c,key="t3c",label_visibility="collapsed")
-    tdf=raw if s3=="All Campaigns" else raw[raw["Campaign"]==s3]
-    terr=tdf.groupby("Territory").agg({"Unique Leads":"sum","New Leads":"sum","Appointments":"sum","Quote":"sum","Customers":"sum","Sales Amount ($)":"sum","NL Customers":"sum","NL Sales ($)":"sum","Spend ($)":"sum","ROAS":"mean"}).reset_index()
-    tot=terr.sum(numeric_only=True)
-    for col,num,den in [("Leads %","Unique Leads",tot["Unique Leads"]),("Sales %","Sales Amount ($)",tot["Sales Amount ($)"])]:
-        terr[col]=(terr[num]/den*100).round(2)
-    terr["APT/Leads"]=(terr["Appointments"]/terr["Unique Leads"].replace(0,1)*100).round(2)
-    terr["Order/APT"]=(terr["Customers"]/terr["Appointments"].replace(0,1)*100).round(2)
-    terr["Order/Leads"]=(terr["Customers"]/terr["Unique Leads"].replace(0,1)*100).round(2)
-    terr=terr.sort_values("Sales Amount ($)",ascending=False)
-    ul=int(tot["Unique Leads"]); apt=int(tot["Appointments"]); cu=int(tot["Customers"]); sal=tot["Sales Amount ($)"]
-    ap=round(apt/ul*100) if ul else 0
-    def tcell(color,label,value):
-        return ('<div style="background:white;border:1px solid #e5e7eb;border-radius:10px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.05)">'+
-                f'<div style="height:4px;border-radius:3px;background:{color};margin-bottom:8px"></div>'+
-                f'<div style="font-size:0.65rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">{label}</div>'+
-                f'<div style="font-size:1.2rem;font-weight:700;color:#111827">{value}</div></div>')
-    st.markdown('<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px">'+tcell("#1877F2","Total Leads",fn(ul))+tcell("#10b981","Appointments",fn(apt))+tcell("#8b5cf6","Customers",fn(cu))+tcell("#22c55e","Total Sales",fc(sal))+tcell("#f59e0b","APT / Leads",f"{ap}%")+'</div>',unsafe_allow_html=True)
-    d1,d2=st.columns(2,gap="large")
-    with d1:
-        st.markdown(sh("🥧 Leads % of Total")+sb_o(),unsafe_allow_html=True)
-        fl=px.pie(terr,values="Unique Leads",names="Territory",hole=0.42,color_discrete_sequence=COLORS)
-        fl.update_traces(textposition="inside",textinfo="percent",hovertemplate="<b>%{label}</b><br>%{value:,}<br>%{percent}<extra></extra>")
-        fl.update_layout(height=290,margin=dict(t=5,b=5,l=0,r=0),paper_bgcolor="white",legend=dict(font=dict(size=9)))
-        st.plotly_chart(fl,use_container_width=True); st.markdown(sb_c(),unsafe_allow_html=True)
-    with d2:
-        st.markdown(sh("💰 Sales % of Total")+sb_o(),unsafe_allow_html=True)
-        fs=px.pie(terr[terr["Sales Amount ($)"]>0],values="Sales Amount ($)",names="Territory",hole=0.42,color_discrete_sequence=COLORS)
-        fs.update_traces(textposition="inside",textinfo="percent",hovertemplate="<b>%{label}</b><br>$%{value:,.0f}<br>%{percent}<extra></extra>")
-        fs.update_layout(height=290,margin=dict(t=5,b=5,l=0,r=0),paper_bgcolor="white",legend=dict(font=dict(size=9)))
-        st.plotly_chart(fs,use_container_width=True); st.markdown(sb_c(),unsafe_allow_html=True)
-    st.markdown(sh("🏢 Regional Office Performance")+sb_o(),unsafe_allow_html=True)
-    disp=terr[["Territory","Unique Leads","New Leads","Appointments","Quote","Customers","Sales Amount ($)","NL Customers","NL Sales ($)","Leads %","Sales %","APT/Leads","Order/APT","Order/Leads"]].copy()
-    tr_r=pd.DataFrame([{"Territory":"Total","Unique Leads":int(tot["Unique Leads"]),"New Leads":int(tot["New Leads"]),"Appointments":int(tot["Appointments"]),"Quote":int(tot["Quote"]),"Customers":int(tot["Customers"]),"Sales Amount ($)":tot["Sales Amount ($)"],"NL Customers":int(tot["NL Customers"]),"NL Sales ($)":tot["NL Sales ($)"],"Leads %":100.0,"Sales %":100.0,"APT/Leads":round(tot["Appointments"]/tot["Unique Leads"]*100,2) if tot["Unique Leads"] else 0,"Order/APT":round(tot["Customers"]/tot["Appointments"]*100,2) if tot["Appointments"] else 0,"Order/Leads":round(tot["Customers"]/tot["Unique Leads"]*100,2) if tot["Unique Leads"] else 0}])
-    disp=pd.concat([disp,tr_r],ignore_index=True)
-    for c in ["Sales Amount ($)","NL Sales ($)"]: disp[c]=disp[c].apply(lambda x:f"${x:,.2f}")
-    for c in ["Leads %","Sales %","APT/Leads","Order/Leads"]: disp[c]=disp[c].apply(lambda x:f"{x:.2f}")
-    disp["Order/APT"]=disp["Order/APT"].apply(lambda x:f"{x:.0f}%")
-    disp.columns=["Regional Office","Unique Leads","New Leads","APT","Quote","Customers","Sales Amount","NL Customers","NL Sales","Leads %","Sales %","APT/Leads","Order/APT","Order/Leads"]
-    st.dataframe(disp,use_container_width=True,hide_index=True,height=380); st.markdown(sb_c(),unsafe_allow_html=True)
-    st.markdown(sh("📊 Campaign Breakdown by Territory")+sb_o(),unsafe_allow_html=True)
-    tc=raw.copy()
-    if sel_off!="All": tc=tc[tc["Territory"]==sel_off]
-    pm=st.selectbox("Metric",["Sales Amount ($)","Unique Leads","Appointments","Customers","Spend ($)"],key="pm",label_visibility="collapsed")
-    fg=px.bar(tc.sort_values("Territory"),x="Territory",y=pm,color="Campaign",barmode="group",color_discrete_sequence=COLORS,text_auto=".2s")
-    fg.update_layout(height=280,margin=dict(t=8,b=80,l=50,r=10),paper_bgcolor="white",plot_bgcolor="white",xaxis=dict(showgrid=False,tickangle=-30),yaxis=dict(showgrid=True,gridcolor="#f3f4f6"),legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1))
-    st.plotly_chart(fg,use_container_width=True); st.markdown(sb_c(),unsafe_allow_html=True)
+
+    if "Campaign Performance" not in data:
+        st.warning("No Campaign Performance sheet found."); st.stop()
+    if "Daily Performance" not in data:
+        st.warning("No Daily Performance sheet found."); st.stop()
+
+    camp_df = data["Campaign Performance"].copy()
+    daily   = data["Daily Performance"].copy()
+    daily["Date"] = pd.to_datetime(daily["Date"])
+
+    # Apply date filter from sidebar
+    if date_range and len(date_range) == 2:
+        daily = daily[(daily["Date"] >= pd.Timestamp(date_range[0])) &
+                      (daily["Date"] <= pd.Timestamp(date_range[1]))]
+
+    # ── Summary table ─────────────────────────────────────────────
+    st.markdown(sh("📈 Campaign Trends") + sb_o(), unsafe_allow_html=True)
+    st.markdown(
+        "<p style='font-size:0.78rem;color:#6b7280;margin-bottom:10px'>"
+        "Click any campaign row to see trend chart below.</p>",
+        unsafe_allow_html=True)
+
+    # Build display table
+    tb = camp_df.copy()
+    tb["Cost/Lead"]  = tb.apply(lambda r: fc(r["Spend ($)"]/r["CRM Leads"]) if r.get("CRM Leads",0)>0 else "—", axis=1)
+    tb["APT/Lead"]   = tb.apply(lambda r: f'{r["Appointments"]/r["CRM Leads"]*100:.1f}%' if r.get("CRM Leads",0)>0 and r.get("Appointments",0)>0 else "—", axis=1)
+    tb["Order/APT"]  = tb.apply(lambda r: f'{r["Customers"]/r["Appointments"]*100:.1f}%' if r.get("Appointments",0)>0 else "—", axis=1)
+
+    # Total row
+    tot = camp_df.sum(numeric_only=True)
+    total_row = {
+        "Campaign Objective": "Total",
+        "Clicks": fn(tot["Clicks"]),
+        "Spend ($)": fc(tot["Spend ($)"]),
+        "CRM Leads": fn(tot["CRM Leads"]),
+        "Cost/Lead": fc(tot["Spend ($)"]/tot["CRM Leads"]) if tot["CRM Leads"]>0 else "—",
+        "Appointments": fn(tot["Appointments"]),
+        "APT/Lead": f'{tot["Appointments"]/tot["CRM Leads"]*100:.1f}%' if tot["CRM Leads"]>0 else "—",
+        "Customers": fn(tot["Customers"]),
+        "Order/APT": f'{tot["Customers"]/tot["Appointments"]*100:.1f}%' if tot["Appointments"]>0 else "—",
+        "Sales Amount ($)": fc(tot["Sales Amount ($)"]),
+        "ROAS": f'{tot["Sales Amount ($)"]/tot["Spend ($)"]:.1f}x' if tot["Spend ($)"]>0 else "—",
+    }
+
+    disp = tb[["Campaign Objective","Clicks","Spend ($)","CRM Leads","Cost/Lead",
+               "Appointments","APT/Lead","Customers","Order/APT","Sales Amount ($)","ROAS"]].copy()
+    disp["Clicks"]          = disp["Clicks"].apply(fn)
+    disp["Spend ($)"]       = disp["Spend ($)"].apply(fc)
+    disp["CRM Leads"]       = disp["CRM Leads"].apply(fn)
+    disp["Appointments"]    = disp["Appointments"].apply(fn)
+    disp["Customers"]       = disp["Customers"].apply(fn)
+    disp["Sales Amount ($)"]= disp["Sales Amount ($)"].apply(fc)
+    disp["ROAS"]            = disp["ROAS"].apply(lambda x: f"{x:.1f}x" if isinstance(x,float) and x>0 else "—")
+    disp.columns = ["Campaign","Clicks","Cost","Leads","Cost/Lead","APT","APT/Lead","Customers","Order/APT","Sales","ROAS"]
+
+    total_disp = pd.DataFrame([{
+        "Campaign":"Total","Clicks":total_row["Clicks"],"Cost":total_row["Spend ($)"],
+        "Leads":total_row["CRM Leads"],"Cost/Lead":total_row["Cost/Lead"],
+        "APT":total_row["Appointments"],"APT/Lead":total_row["APT/Lead"],
+        "Customers":total_row["Customers"],"Order/APT":total_row["Order/APT"],
+        "Sales":total_row["Sales Amount ($)"],"ROAS":total_row["ROAS"]}])
+    disp = pd.concat([total_disp, disp], ignore_index=True)
+
+    st.dataframe(disp, use_container_width=True, hide_index=True, height=220)
+    st.markdown(sb_c(), unsafe_allow_html=True)
+
+    # ── Campaign selector + trend chart ───────────────────────────
+    st.markdown(sh("📊 Campaign Trend Chart") + sb_o(), unsafe_allow_html=True)
+
+    camp_opts = list(camp_df["Campaign Objective"].unique())
+    sel_trend = st.selectbox("Select campaign", camp_opts, key="trend_camp",
+                             label_visibility="collapsed")
+
+    metric_opts = ["Spend ($)","CRM Leads","Conversions","Appointments","Customers","Sales Amount ($)","ROAS"]
+    metric_labels = ["Spend","Leads","Conversions","APT","Customers","Sales","ROAS"]
+
+    mc = st.columns(len(metric_opts))
+    if "trend_metric" not in st.session_state:
+        st.session_state.trend_metric = "CRM Leads"
+    for i,(m,lbl) in enumerate(zip(metric_opts,metric_labels)):
+        if mc[i].button(lbl, key=f"tm_{i}", use_container_width=True,
+                        type="primary" if st.session_state.trend_metric==m else "secondary"):
+            st.session_state.trend_metric = m
+            st.rerun()
+
+    metric = st.session_state.trend_metric
+
+    # Filter daily data for selected campaign
+    if "Campaign" in daily.columns:
+        camp_daily = daily[daily["Campaign"] == sel_trend].copy()
+    else:
+        camp_daily = daily.copy()
+
+    agg = camp_daily.groupby("Date").agg({
+        "Spend ($)":"sum","CRM Leads":"sum","Conversions":"sum",
+        "Appointments":"sum","Customers":"sum","Sales Amount ($)":"sum","ROAS":"mean"
+    }).reset_index()
+
+    if len(agg) == 0:
+        st.info("No daily data available for this campaign.")
+    else:
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=agg["Date"], y=agg[metric],
+            mode="lines+markers",
+            name=sel_trend,
+            line=dict(color="#1877F2", width=2),
+            marker=dict(size=4),
+            fill="tozeroy",
+            fillcolor="rgba(24,119,242,0.08)",
+            hovertemplate=f"<b>%{{x|%b %d}}</b><br>{metric}: %{{y:,.1f}}<extra></extra>"
+        ))
+        fig.update_layout(
+            height=260,
+            margin=dict(t=10,b=40,l=55,r=20),
+            paper_bgcolor="white", plot_bgcolor="white",
+            xaxis=dict(showgrid=False, tickformat="%b %y"),
+            yaxis=dict(showgrid=True, gridcolor="#f3f4f6"),
+            hovermode="x unified",
+            showlegend=False
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown(sb_c(), unsafe_allow_html=True)
