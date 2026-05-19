@@ -390,9 +390,8 @@ elif st.session_state.page == "trends":
     # ── Campaign selector + trend chart ───────────────────────────
 
 
-    camp_opts = list(camp_df["Campaign Objective"].unique())
-    sel_trend = st.selectbox("Select campaign", camp_opts, key="trend_camp",
-                             label_visibility="collapsed")
+    # Use campaign from sidebar filter
+    sel_trend = sel_camp if sel_camp != "All" else None
 
     metric_opts   = ["Spend ($)","CRM Leads","Conversions","Appointments","Customers","Sales Amount ($)","ROAS"]
     metric_labels = ["Spend","Leads","Conversions","APT","Customers","Sales","ROAS"]
@@ -400,19 +399,18 @@ elif st.session_state.page == "trends":
     if "trend_metric" not in st.session_state:
         st.session_state.trend_metric = "CRM Leads"
 
-    c1, c2 = st.columns([2, 5])
-    with c1:
-        sel_metric_lbl = st.selectbox(
-            "Metric", metric_labels,
-            index=metric_labels.index(
-                metric_labels[metric_opts.index(st.session_state.trend_metric)]
-                if st.session_state.trend_metric in metric_opts else 1),
-            label_visibility="collapsed", key="trend_metric_sel")
-        metric = metric_opts[metric_labels.index(sel_metric_lbl)]
-        st.session_state.trend_metric = metric
+    m1, _ = st.columns([2, 5])
+    sel_metric_lbl = m1.selectbox(
+        "Metric", metric_labels,
+        index=metric_labels.index(
+            metric_labels[metric_opts.index(st.session_state.trend_metric)]
+            if st.session_state.trend_metric in metric_opts else 1),
+        label_visibility="collapsed", key="trend_metric_sel")
+    metric = metric_opts[metric_labels.index(sel_metric_lbl)]
+    st.session_state.trend_metric = metric
 
     # Filter daily data for selected campaign
-    if "Campaign" in daily.columns:
+    if sel_trend and "Campaign" in daily.columns:
         camp_daily = daily[daily["Campaign"] == sel_trend].copy()
     else:
         camp_daily = daily.copy()
