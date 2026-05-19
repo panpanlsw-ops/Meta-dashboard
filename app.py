@@ -376,9 +376,12 @@ elif st.session_state.page == "territory":
              f'<td>100%</td><td>100%</td>' +
              f'<td>{al_tot:.1f}%</td><td>{oa_tot:.0f}%</td><td>{ol_tot:.2f}%</td></tr>')
 
-    for _, r in terr.iterrows():
-        html += (f'<tr>' +
-                 f'<td><b>{r["Territory"]}</b></td>' +
+    for idx, r in terr.iterrows():
+        tid = f"t{idx}"
+        # Territory row — clickable
+        html += (f'<tr onclick="tog(\'{tid}\')" style="cursor:pointer;background:white;border-bottom:1px solid #e5e7eb">' +
+                 f'<td><span id="{tid}-a" style="display:inline-block;font-size:10px;color:#9ca3af;margin-right:6px;transition:transform 0.15s">▶</span>' +
+                 f'<b>{r["Territory"]}</b></td>' +
                  f'<td>{int(r["Unique Leads"])}</td><td>{int(r["New Leads"])}</td>' +
                  f'<td>{int(r["Appointments"])}</td><td>{int(r["Quote"])}</td>' +
                  f'<td>{int(r["Customers"])}</td><td>{fc(r["Sales Amount ($)"])}</td>' +
@@ -389,7 +392,48 @@ elif st.session_state.page == "territory":
                  f'<td>{r["Order/APT"]:.0f}%</td>' +
                  f'<td>{r["Order/Leads"]:.2f}%</td></tr>')
 
-    html += "</tbody></table></div>"
+        # Campaign breakdown
+        camp_data = tdf[tdf["Territory"] == r["Territory"]].groupby("Campaign").agg({
+            "Unique Leads":"sum","New Leads":"sum","Appointments":"sum",
+            "Quote":"sum","Customers":"sum","Sales Amount ($)":"sum",
+            "NL Customers":"sum","NL Sales ($)":"sum"
+        }).reset_index().sort_values("Unique Leads", ascending=False)
+
+        t_ul = r["Unique Leads"] if r["Unique Leads"] else 1
+        t_sa = r["Sales Amount ($)"] if r["Sales Amount ($)"] else 1
+
+        for _, cr in camp_data.iterrows():
+            c_leads_pct = cr["Unique Leads"] / t_ul * 100
+            c_sales_pct = cr["Sales Amount ($)"] / t_sa * 100 if t_sa else 0
+            c_apt_leads = cr["Appointments"] / cr["Unique Leads"] * 100 if cr["Unique Leads"] else 0
+            c_ord_apt   = cr["Customers"] / cr["Appointments"] * 100 if cr["Appointments"] else 0
+            c_ord_leads = cr["Customers"] / cr["Unique Leads"] * 100 if cr["Unique Leads"] else 0
+            html += (f'<tr class="{tid}-camp" style="display:none;background:#f5f8ff;border-bottom:1px solid #eff0f6">' +
+                     f'<td style="padding-left:28px;color:#1877F2;font-weight:500;font-size:11.5px">{cr["Campaign"]}</td>' +
+                     f'<td style="font-size:11.5px">{int(cr["Unique Leads"])}</td>' +
+                     f'<td style="font-size:11.5px">{int(cr["New Leads"])}</td>' +
+                     f'<td style="font-size:11.5px">{int(cr["Appointments"])}</td>' +
+                     f'<td style="font-size:11.5px">{int(cr["Quote"])}</td>' +
+                     f'<td style="font-size:11.5px">{int(cr["Customers"])}</td>' +
+                     f'<td style="font-size:11.5px">{fc(cr["Sales Amount ($)"])}</td>' +
+                     f'<td style="font-size:11.5px">{int(cr["NL Customers"])}</td>' +
+                     f'<td style="font-size:11.5px">{fc(cr["NL Sales ($)"])}</td>' +
+                     f'<td>{bar(c_leads_pct, "#1877F2")}</td>' +
+                     f'<td>{bar(c_sales_pct, "#22c55e")}</td>' +
+                     f'<td style="font-size:11.5px">{c_apt_leads:.1f}%</td>' +
+                     f'<td style="font-size:11.5px">{c_ord_apt:.0f}%</td>' +
+                     f'<td style="font-size:11.5px">{c_ord_leads:.2f}%</td></tr>')
+
+    html += """</tbody></table></div>
+    <script>
+    function tog(id){
+      var rows=document.querySelectorAll('.'+id+'-camp');
+      var arrow=document.getElementById(id+'-a');
+      var open=rows[0]&&rows[0].style.display!=='none';
+      rows.forEach(function(r){r.style.display=open?'none':'table-row';});
+      if(arrow){arrow.style.transform=open?'':'rotate(90deg)';}
+    }
+    </script>"""
     st.markdown(html, unsafe_allow_html=True)
 
 # ── PAGE 3 ─────────────────────────────────────────────────────────────────────
