@@ -332,112 +332,65 @@ elif st.session_state.page == "territory":
         '</div>', unsafe_allow_html=True)
 
     # ── Regional Office Performance table ──────────────────────────
-    st.markdown(
-        "<p style='font-size:0.9rem;font-weight:600;color:#111827;margin-bottom:8px'>"
-        "Regional Office Performance</p>",
-        unsafe_allow_html=True)
+    # Sort by Unique Leads desc, then Sales Amount desc
+    terr = terr.sort_values(["Unique Leads","Sales Amount ($)"], ascending=[False,False])
 
-    disp = terr[[
-        "Territory","Unique Leads","New Leads","Appointments","Quote",
-        "Customers","Sales Amount ($)","NL Customers","NL Sales ($)",
-        "Leads %","Sales %","APT/Leads","Order/APT","Order/Leads"
-    ]].copy()
+    def bar(pct, color):
+        w = min(float(pct), 100)
+        return (f'<div style="display:flex;align-items:center;gap:6px">' +
+                f'<div style="flex:1;height:4px;background:#e5e7eb;border-radius:3px;min-width:50px">' +
+                f'<div style="width:{w}%;height:100%;background:{color};border-radius:3px"></div></div>' +
+                f'<span style="font-size:11px;color:#374151;white-space:nowrap">{pct:.2f}</span></div>')
 
-    # Add total row
-    tr_r = pd.DataFrame([{
-        "Territory":"Total",
-        "Unique Leads":int(tot["Unique Leads"]),
-        "New Leads":int(tot["New Leads"]),
-        "Appointments":int(tot["Appointments"]),
-        "Quote":int(tot["Quote"]),
-        "Customers":int(tot["Customers"]),
-        "Sales Amount ($)":tot["Sales Amount ($)"],
-        "NL Customers":int(tot["NL Customers"]),
-        "NL Sales ($)":tot["NL Sales ($)"],
-        "Leads %":100.0,"Sales %":100.0,
-        "APT/Leads":round(tot["Appointments"]/tot["Unique Leads"]*100,2) if tot["Unique Leads"] else 0,
-        "Order/APT":round(tot["Customers"]/tot["Appointments"]*100,2) if tot["Appointments"] else 0,
-        "Order/Leads":round(tot["Customers"]/tot["Unique Leads"]*100,2) if tot["Unique Leads"] else 0
-    }])
-    disp = pd.concat([tr_r, disp], ignore_index=True)
+    html = """
+    <style>
+    .terr-tbl{width:100%;border-collapse:collapse;font-size:12px}
+    .terr-tbl thead tr{background:#111827}
+    .terr-tbl thead th{color:white;padding:9px 10px;text-align:left;font-weight:500;
+        font-size:11px;letter-spacing:0.05em;white-space:nowrap}
+    .terr-tbl tbody tr{border-bottom:1px solid #e5e7eb}
+    .terr-tbl tbody tr:hover{background:#f0f7ff}
+    .terr-tbl td{padding:8px 10px;white-space:nowrap;color:#111827;font-size:12px}
+    .terr-tbl tr.tot td{background:#dbeafe;color:#1e3a5f;font-weight:600;border-bottom:2px solid #93c5fd}
+    </style>
+    <div style="overflow-x:auto">
+    <table class="terr-tbl">
+    <thead><tr>
+      <th>Regional Office</th>
+      <th>Unique Leads</th><th>New Leads</th><th>APT</th><th>Quote</th>
+      <th>Customers</th><th>Sales Amount</th>
+      <th>NL Customers</th><th>NL Sales</th>
+      <th>Leads %</th><th>Sales %</th>
+      <th>APT/Leads</th><th>Order/APT</th><th>Order/Leads</th>
+    </tr></thead>
+    <tbody>"""
 
-    # Format columns
-    for c in ["Sales Amount ($)","NL Sales ($)"]:
-        disp[c] = disp[c].apply(lambda x: f"${x:,.2f}")
-    for c in ["Leads %","Sales %","APT/Leads","Order/Leads"]:
-        disp[c] = disp[c].apply(lambda x: f"{x:.2f}%")
-    disp["Order/APT"] = disp["Order/APT"].apply(lambda x: f"{x:.0f}%")
+    al_tot = round(tot["Appointments"]/tot["Unique Leads"]*100,2) if tot["Unique Leads"] else 0
+    oa_tot = round(tot["Customers"]/tot["Appointments"]*100,2) if tot["Appointments"] else 0
+    ol_tot = round(tot["Customers"]/tot["Unique Leads"]*100,2) if tot["Unique Leads"] else 0
+    html += (f'<tr class="tot"><td><b>Total</b></td>' +
+             f'<td>{fn(tot["Unique Leads"])}</td><td>{fn(tot["New Leads"])}</td>' +
+             f'<td>{fn(tot["Appointments"])}</td><td>{fn(tot["Quote"])}</td>' +
+             f'<td>{fn(tot["Customers"])}</td><td>{fc(tot["Sales Amount ($)"])}</td>' +
+             f'<td>{fn(tot["NL Customers"])}</td><td>{fc(tot["NL Sales ($)"])}</td>' +
+             f'<td>100%</td><td>100%</td>' +
+             f'<td>{al_tot:.1f}%</td><td>{oa_tot:.0f}%</td><td>{ol_tot:.2f}%</td></tr>')
 
-    # ── Expandable territory table with campaign breakdown ─────────
-    # Header row
-    st.markdown("""
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr 1.2fr 1fr 1fr 1fr 1fr;
-                gap:0;background:#111827;border-radius:8px 8px 0 0;padding:8px 12px;
-                font-size:0.65rem;font-weight:600;color:white;text-transform:uppercase;
-                letter-spacing:0.07em;margin-bottom:0">
-      <div>Regional Office</div><div>Unique Leads</div><div>New Leads</div>
-      <div>APT</div><div>Quote</div><div>Customers</div><div>Sales Amount</div>
-      <div>Leads %</div><div>Sales %</div><div>APT/Leads</div><div>Order/APT</div>
-    </div>""", unsafe_allow_html=True)
+    for _, r in terr.iterrows():
+        html += (f'<tr>' +
+                 f'<td><b>{r["Territory"]}</b></td>' +
+                 f'<td>{int(r["Unique Leads"])}</td><td>{int(r["New Leads"])}</td>' +
+                 f'<td>{int(r["Appointments"])}</td><td>{int(r["Quote"])}</td>' +
+                 f'<td>{int(r["Customers"])}</td><td>{fc(r["Sales Amount ($)"])}</td>' +
+                 f'<td>{int(r["NL Customers"])}</td><td>{fc(r["NL Sales ($)"])}</td>' +
+                 f'<td>{bar(r["Leads %"], "#1877F2")}</td>' +
+                 f'<td>{bar(r["Sales %"], "#22c55e")}</td>' +
+                 f'<td>{r["APT/Leads"]:.1f}%</td>' +
+                 f'<td>{r["Order/APT"]:.0f}%</td>' +
+                 f'<td>{r["Order/Leads"]:.2f}%</td></tr>')
 
-    # Total row
-    tot_style = "display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr 1.2fr 1fr 1fr 1fr 1fr;gap:0;padding:8px 12px;font-size:0.8rem;font-weight:600;background:#dbeafe;color:#1e3a5f;border-bottom:1px solid #bfdbfe"
-    apt_leads_tot = f"{round(tot['Appointments']/tot['Unique Leads']*100,1)}%" if tot["Unique Leads"] else "—"
-    order_apt_tot = f"{round(tot['Customers']/tot['Appointments']*100,1)}%" if tot["Appointments"] else "—"
-    leads_pct_tot = "100.0%"
-    sales_pct_tot = "100.0%"
-    st.markdown(f"""
-    <div style="{tot_style}">
-      <div>Total</div>
-      <div>{fn(tot["Unique Leads"])}</div><div>{fn(tot["New Leads"])}</div>
-      <div>{fn(tot["Appointments"])}</div><div>{fn(tot["Quote"])}</div>
-      <div>{fn(tot["Customers"])}</div><div>{fc(tot["Sales Amount ($)"])}</div>
-      <div>{leads_pct_tot}</div><div>{sales_pct_tot}</div>
-      <div>{apt_leads_tot}</div><div>{order_apt_tot}</div>
-    </div>""", unsafe_allow_html=True)
-
-    # Each territory as expander
-    row_style = "display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr 1.2fr 1fr 1fr 1fr 1fr;gap:0;padding:7px 12px;font-size:0.8rem;color:#111827;border-bottom:1px solid #f3f4f6"
-    camp_header_style = "display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr 1.2fr;gap:0;padding:6px 12px;font-size:0.68rem;font-weight:600;color:#6b7280;background:#f9fafb;text-transform:uppercase;letter-spacing:0.05em"
-    camp_row_style = "display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr 1.2fr;gap:0;padding:6px 12px;font-size:0.78rem;color:#374151;border-bottom:1px solid #f3f4f6"
-
-    for _, row in terr.iterrows():
-        t = row["Territory"]
-        ul_t  = int(row["Unique Leads"])
-        nl_t  = int(row["New Leads"])
-        ap_t  = int(row["Appointments"])
-        qu_t  = int(row["Quote"])
-        cu_t  = int(row["Customers"])
-        sa_t  = row["Sales Amount ($)"]
-        lp_t  = f"{row['Leads %']:.2f}%"
-        sp_t  = f"{row['Sales %']:.2f}%"
-        al_t  = f"{row['APT/Leads']:.1f}%"
-        oa_t  = f"{row['Order/APT']:.0f}%"
-
-        with st.expander(f"**{t}**  ·  Leads: {ul_t}  ·  APT: {ap_t}  ·  Customers: {cu_t}  ·  Sales: {fc(sa_t)}", expanded=False):
-            # Campaign breakdown for this territory
-            camp_data = tdf[tdf["Territory"] == t].groupby("Campaign").agg({
-                "Unique Leads":"sum","New Leads":"sum","Appointments":"sum",
-                "Quote":"sum","Customers":"sum","Sales Amount ($)":"sum"
-            }).reset_index().sort_values("Sales Amount ($)", ascending=False)
-
-            st.markdown(f"""
-            <div style="{camp_header_style}">
-              <div>Campaign</div><div>Unique Leads</div><div>New Leads</div>
-              <div>APT</div><div>Quote</div><div>Customers</div><div>Sales</div>
-            </div>""", unsafe_allow_html=True)
-
-            for _, cr in camp_data.iterrows():
-                st.markdown(f"""
-                <div style="{camp_row_style}">
-                  <div>{cr["Campaign"]}</div>
-                  <div>{int(cr["Unique Leads"])}</div>
-                  <div>{int(cr["New Leads"])}</div>
-                  <div>{int(cr["Appointments"])}</div>
-                  <div>{int(cr["Quote"])}</div>
-                  <div>{int(cr["Customers"])}</div>
-                  <div>{fc(cr["Sales Amount ($)"])}</div>
-                </div>""", unsafe_allow_html=True)
+    html += "</tbody></table></div>"
+    st.markdown(html, unsafe_allow_html=True)
 
 # ── PAGE 3 ─────────────────────────────────────────────────────────────────────
 elif st.session_state.page == "trends":
