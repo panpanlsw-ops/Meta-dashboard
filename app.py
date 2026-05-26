@@ -97,13 +97,26 @@ def sb_c(): return "</div>"
 def load_data():
     import gspread
     from google.oauth2.service_account import Credentials
-    creds = Credentials.from_service_account_file(
-        "lsw-marketing-b9a13bd21034.json",
-        scopes=[
-            "https://www.googleapis.com/auth/spreadsheets.readonly",
-            "https://www.googleapis.com/auth/drive.readonly"
-        ]
-    )
+
+    # Try Streamlit secrets first (for deployment)
+    # Fall back to local JSON file (for local development)
+    try:
+        creds = Credentials.from_service_account_info(
+            st.secrets["gcp_service_account"],
+            scopes=[
+                "https://www.googleapis.com/auth/spreadsheets.readonly",
+                "https://www.googleapis.com/auth/drive.readonly"
+            ]
+        )
+    except Exception:
+        creds = Credentials.from_service_account_file(
+            "lsw-marketing-b9a13bd21034.json",
+            scopes=[
+                "https://www.googleapis.com/auth/spreadsheets.readonly",
+                "https://www.googleapis.com/auth/drive.readonly"
+            ]
+        )
+
     gc = gspread.authorize(creds)
     sh = gc.open_by_key("1ZcB9ZiNuZ0a8CwCnqtxmg2pO_0OGk_Nu5icUhmPGF7s")
 
