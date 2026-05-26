@@ -93,10 +93,30 @@ def sb_o():
     return '<div style="background:white;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;padding:14px;margin-bottom:24px">'
 def sb_c(): return "</div>"
 
-@st.cache_data(ttl=0)
-def load_data(f):
-    xls=pd.ExcelFile(f)
-    return {n:pd.read_excel(xls,sheet_name=n) for n in xls.sheet_names}
+@st.cache_data(ttl=3600)
+def load_data():
+    import gspread
+    from google.oauth2.service_account import Credentials
+    creds = Credentials.from_service_account_file(
+        "lsw-marketing-b9a13bd21034.json",
+        scopes=[
+            "https://www.googleapis.com/auth/spreadsheets.readonly",
+            "https://www.googleapis.com/auth/drive.readonly"
+        ]
+    )
+    gc = gspread.authorize(creds)
+    sh = gc.open_by_key("1ZcB9ZiNuZ0a8CwCnqtxmg2pO_0OGk_Nu5icUhmPGF7s")
+
+    def read_tab(name):
+        records = sh.worksheet(name).get_all_records()
+        return pd.DataFrame(records)
+
+    return {
+        "Campaign Performance":  read_tab("Campaign Performance"),
+        "Territory Summary":     read_tab("Territory Summary"),
+        "Territory Detail":      read_tab("Territory Detail"),
+        "Overview":              read_tab("Overview"),
+    }
 
 def ch(h=210):
     return dict(height=h, margin=dict(t=8,b=32,l=50,r=12),
@@ -109,7 +129,7 @@ def ch(h=210):
 for k,v in [("page","overview"),("t1c","All Campaigns"),("gran","Daily")]:
     if k not in st.session_state: st.session_state[k]=v
 
-try:    data=load_data("meta_ads_data.xlsx")
+try:    data=load_data()
 except: data={}
 
 camp_list = ["All"]
@@ -117,7 +137,7 @@ if "Campaign Performance" in data:
     camp_list += list(data["Campaign Performance"]["Campaign Objective"].unique())
 off_list = ["All"]
 if "Territory Performance" in data:
-    off_list += sorted(data["Territory Performance"]["Territory"].unique().tolist())
+    off_list += sorted(data["Territory Summary"]["Territory"].unique().tolist())
 
 # ════════════════════════════════════════════════════════════
 # SIDEBAR
@@ -284,15 +304,15 @@ if st.session_state.page == "overview":
 # ── PAGE 2 ─────────────────────────────────────────────────────────────────────
 elif st.session_state.page == "territory":
 
-    if "Territory Performance" not in data:
+    if "Territory Summary" not in data:
         st.warning("No Territory Performance sheet found."); st.stop()
 
-    raw = data["Territory Performance"].copy()
+    raw = data["Territory Summary"].copy()
 
     # Apply filters from sidebar
     tdf = raw.copy()
     if sel_camp != "All":
-        tdf = tdf[tdf["Campaign"] == sel_camp]
+        tdf = tdf[tdf["Campaign"] == sel_camp] if "Campaign" in tdf.columns else tdf
     if sel_off != "All":
         tdf = tdf[tdf["Territory"] == sel_off]
 
