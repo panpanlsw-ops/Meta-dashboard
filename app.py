@@ -142,7 +142,73 @@ def ch(h=210):
 for k,v in [("page","overview"),("t1c","All Campaigns"),("gran","Daily")]:
     if k not in st.session_state: st.session_state[k]=v
 
-try:    data=load_data()
+try:
+    data = load_data()
+    # Rename columns to match dashboard expectations
+    def clean_numeric(df, cols):
+        for col in cols:
+            if col in df.columns:
+                df[col] = pd.to_numeric(
+                    df[col].astype(str)
+                    .str.replace("[$,%]","",regex=True)
+                    .str.strip(), errors="coerce").fillna(0)
+        return df
+
+    if "Campaign Performance" in data:
+        data["Campaign Performance"] = data["Campaign Performance"].rename(columns={
+            "Campaign":      "Campaign Objective",
+            "Cost":          "Spend ($)",
+            "unique_leads":  "CRM Leads",
+            "new_leads":     "New Leads",
+            "apt":           "Appointments",
+            "sales_amount":  "Sales Amount ($)",
+            "apt/lead":      "APT/Lead",
+        })
+        data["Campaign Performance"] = clean_numeric(
+            data["Campaign Performance"],
+            ["Spend ($)","CRM Leads","New Leads","Appointments",
+             "Customers","Sales Amount ($)","Year","Month"])
+
+    if "Territory Summary" in data:
+        data["Territory Summary"] = data["Territory Summary"].rename(columns={
+            "Region_Clean":  "Territory",
+            "unique_leads":  "Unique Leads",
+            "new_leads":     "New Leads",
+            "apt":           "Appointments",
+            "quote":         "Quote",
+            "customers":     "Customers",
+            "sales_amount":  "Sales Amount ($)",
+            "leads_%":       "Leads %",
+            "sales_%":       "Sales %",
+            "apt/lead":      "APT/Leads",
+            "order/lead":    "Order/Leads",
+        })
+        data["Territory Summary"] = clean_numeric(
+            data["Territory Summary"],
+            ["Unique Leads","New Leads","Appointments","Quote",
+             "Customers","Sales Amount ($)","Year","Month"])
+
+    if "Territory Detail" in data:
+        data["Territory Detail"] = data["Territory Detail"].rename(columns={
+            "Region_Clean":  "Territory",
+            "unique_leads":  "Unique Leads",
+            "new_leads":     "New Leads",
+            "apt":           "Appointments",
+            "quote":         "Quote",
+            "customers":     "Customers",
+            "sales_amount":  "Sales Amount ($)",
+        })
+        data["Territory Detail"] = clean_numeric(
+            data["Territory Detail"],
+            ["Unique Leads","New Leads","Appointments","Quote",
+             "Customers","Sales Amount ($)","Year","Month"])
+
+    if "Overview" in data:
+        data["Overview"] = clean_numeric(
+            data["Overview"],
+            ["CRM Leads","Appointments","Customers",
+             "Sales Amount ($)","Spend ($)","Year","Month"])
+
 except: data={}
 
 camp_list = ["All"]
@@ -238,7 +304,16 @@ st.markdown(
 if st.session_state.page == "overview":
 
     if "Overview" in data:
-        ov=data["Overview"].set_index("Metric")
+        ov_all = data["Overview"].copy()
+        # Filter by selected date range
+        ov = ov_all[
+            ((ov_all["Year"] > from_year) |
+             ((ov_all["Year"] == from_year) & (ov_all["Month"] >= from_m))) &
+            ((ov_all["Year"] < to_year) |
+             ((ov_all["Year"] == to_year) & (ov_all["Month"] <= to_m)))
+        ]
+        ov_sum = ov[["CRM Leads","Appointments","Customers","Sales Amount ($)","Spend ($)"]].sum()
+
         import calendar
         from datetime import date as _date
         _today = _date.today()
@@ -247,13 +322,12 @@ if st.session_state.page == "overview":
         _pct = round(_days_elapsed / _days_in_month * 100)
 
         def kp(m, color, cur=False):
-            if m not in ov.index:
+            if m not in ov_sum.index or ov_sum[m] == 0:
                 return (f'<div style="background:white;border:1px solid #e5e7eb;border-radius:10px;padding:14px 14px 12px;position:relative;overflow:hidden">' +
                         f'<div style="position:absolute;top:0;left:0;right:0;height:4px;border-radius:10px 10px 0 0;background:{color}"></div>' +
                         f'<div style="font-size:0.58rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">{m}</div>' +
                         '<div style="font-size:1.3rem;font-weight:500;color:#111827;margin-bottom:8px">—</div></div>')
-            r = ov.loc[m]
-            raw = r["Current Period"]
+            raw = ov_sum[m]
             v = fc(raw) if cur else fn(raw)
             paced = raw / _days_elapsed * _days_in_month
             pv = fc(paced) if cur else fn(paced)
@@ -269,13 +343,26 @@ if st.session_state.page == "overview":
 
         st.markdown(
             '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:26px">'+
-            kp("Conversions","#1877F2")+kp("CRM Leads","#f59e0b")+
-            kp("Appointments","#06b6d4")+kp("Customers","#ec4899")+
-            kp("Spend ($)","#22c55e",True)+kp("Sales Amount ($)","#8b5cf6",True)+
+            kp("CRM Leads","#1877F2")+kp("Appointments","#f59e0b")+
+            kp("Customers","#06b6d4")+kp("Spend ($)","#ec4899",True)+
+            kp("Sales Amount ($)","#22c55e",True)+
             '</div>', unsafe_allow_html=True)
+
 
     if "Campaign Performance" in data:
         camp_df=data["Campaign Performance"].copy()
+        # Filter by date range
+        if "Year" in camp_df.columns and "Month" in camp_df.columns:
+            camp_df = camp_df[
+                ((camp_df["Year"] > from_year) |
+                 ((camp_df["Year"] == from_year) & (camp_df["Month"] >= from_m))) &
+                ((camp_df["Year"] < to_year) |
+                 ((camp_df["Year"] == to_year) & (camp_df["Month"] <= to_m)))
+            ]
+        camp_df = camp_df.groupby("Campaign Objective").agg({
+            "Spend ($)":"sum","CRM Leads":"sum",
+            "Appointments":"sum","Customers":"sum","Sales Amount ($)":"sum"
+        }).reset_index()
         opts=["All Campaigns"]+list(camp_df["Campaign Objective"].unique())
         sel = "All Campaigns"
         fd  = camp_df
@@ -324,8 +411,14 @@ elif st.session_state.page == "territory":
 
     # Apply filters from sidebar
     tdf = raw.copy()
-    if sel_camp != "All":
-        tdf = tdf[tdf["Campaign"] == sel_camp] if "Campaign" in tdf.columns else tdf
+    # Filter by date range
+    if "Year" in tdf.columns and "Month" in tdf.columns:
+        tdf = tdf[
+            ((tdf["Year"] > from_year) |
+             ((tdf["Year"] == from_year) & (tdf["Month"] >= from_m))) &
+            ((tdf["Year"] < to_year) |
+             ((tdf["Year"] == to_year) & (tdf["Month"] <= to_m)))
+        ]
     if sel_off != "All":
         tdf = tdf[tdf["Territory"] == sel_off]
 
@@ -338,8 +431,7 @@ elif st.session_state.page == "territory":
     # Aggregate by territory
     terr = tdf.groupby("Territory").agg({
         "Unique Leads":"sum","New Leads":"sum","Appointments":"sum","Quote":"sum",
-        "Customers":"sum","Sales Amount ($)":"sum","NL Customers":"sum",
-        "NL Sales ($)":"sum","Spend ($)":"sum","ROAS":"mean"
+        "Customers":"sum","Sales Amount ($)":"sum",
     }).reset_index()
     tot = terr.sum(numeric_only=True)
 
@@ -403,22 +495,19 @@ elif st.session_state.page == "territory":
       <th>Regional Office</th>
       <th>Unique Leads</th><th>New Leads</th><th>APT</th><th>Quote</th>
       <th>Customers</th><th>Sales Amount</th>
-      <th>NL Customers</th><th>NL Sales</th>
       <th>Leads %</th><th>Sales %</th>
-      <th>APT/Leads</th><th>Order/APT</th><th>Order/Leads</th>
+      <th>APT/Leads</th><th>Order/Leads</th>
     </tr></thead>
     <tbody>"""
 
     al_tot = round(tot["Appointments"]/tot["Unique Leads"]*100,2) if tot["Unique Leads"] else 0
-    oa_tot = round(tot["Customers"]/tot["Appointments"]*100,2) if tot["Appointments"] else 0
     ol_tot = round(tot["Customers"]/tot["Unique Leads"]*100,2) if tot["Unique Leads"] else 0
     html += (f'<tr class="tot"><td><b>Total</b></td>' +
              f'<td>{fn(tot["Unique Leads"])}</td><td>{fn(tot["New Leads"])}</td>' +
-             f'<td>{fn(tot["Appointments"])}</td><td>{fn(tot["Quote"])}</td>' +
+             f'<td>{fn(tot["Appointments"])}</td><td>{fn(tot.get("Quote",0))}</td>' +
              f'<td>{fn(tot["Customers"])}</td><td>{fc(tot["Sales Amount ($)"])}</td>' +
-             f'<td>{fn(tot["NL Customers"])}</td><td>{fc(tot["NL Sales ($)"])}</td>' +
              f'<td>100%</td><td>100%</td>' +
-             f'<td>{al_tot:.1f}%</td><td>{oa_tot:.0f}%</td><td>{ol_tot:.2f}%</td></tr>')
+             f'<td>{al_tot:.1f}%</td><td>{ol_tot:.2f}%</td></tr>')
 
     for idx, r in terr.iterrows():
         tid = f"t{idx}"
@@ -429,43 +518,41 @@ elif st.session_state.page == "territory":
                  f'<td>{int(r["Unique Leads"])}</td><td>{int(r["New Leads"])}</td>' +
                  f'<td>{int(r["Appointments"])}</td><td>{int(r["Quote"])}</td>' +
                  f'<td>{int(r["Customers"])}</td><td>{fc(r["Sales Amount ($)"])}</td>' +
-                 f'<td>{int(r["NL Customers"])}</td><td>{fc(r["NL Sales ($)"])}</td>' +
-                 f'<td>{bar(r["Leads %"], "#1877F2")}</td>' +
-                 f'<td>{bar(r["Sales %"], "#22c55e")}</td>' +
-                 f'<td>{r["APT/Leads"]:.1f}%</td>' +
-                 f'<td>{r["Order/APT"]:.0f}%</td>' +
-                 f'<td>{r["Order/Leads"]:.2f}%</td></tr>')
+                 f'<td>{bar(float(str(r.get("Leads %",0)).replace("%","")), "#1877F2")}</td>' +
+                 f'<td>{bar(float(str(r.get("Sales %",0)).replace("%","")), "#22c55e")}</td>' +
+                 f'<td>{str(r.get("APT/Leads","0%"))}</td>' +
+                 f'<td>{str(r.get("Order/Leads","0%"))}</td></tr>')
 
         # Campaign breakdown
-        camp_data = tdf[tdf["Territory"] == r["Territory"]].groupby("Campaign").agg({
-            "Unique Leads":"sum","New Leads":"sum","Appointments":"sum",
-            "Quote":"sum","Customers":"sum","Sales Amount ($)":"sum",
-            "NL Customers":"sum","NL Sales ($)":"sum"
-        }).reset_index().sort_values("Unique Leads", ascending=False)
+        # Use Territory Detail for campaign breakdown
+        t_detail = data.get("Territory Detail", pd.DataFrame())
+        if not t_detail.empty and "Territory" in t_detail.columns:
+            camp_data = t_detail[t_detail["Territory"] == r["Territory"]].groupby("Campaign").agg({
+                "Unique Leads":"sum","New Leads":"sum","Appointments":"sum",
+                "Quote":"sum","Customers":"sum","Sales Amount ($)":"sum"
+            }).reset_index().sort_values("Unique Leads", ascending=False)
+        else:
+            camp_data = pd.DataFrame()
 
         t_ul = r["Unique Leads"] if r["Unique Leads"] else 1
         t_sa = r["Sales Amount ($)"] if r["Sales Amount ($)"] else 1
 
         for _, cr in camp_data.iterrows():
-            c_leads_pct = cr["Unique Leads"] / t_ul * 100
+            c_leads_pct = cr["Unique Leads"] / t_ul * 100 if t_ul else 0
             c_sales_pct = cr["Sales Amount ($)"] / t_sa * 100 if t_sa else 0
             c_apt_leads = cr["Appointments"] / cr["Unique Leads"] * 100 if cr["Unique Leads"] else 0
-            c_ord_apt   = cr["Customers"] / cr["Appointments"] * 100 if cr["Appointments"] else 0
             c_ord_leads = cr["Customers"] / cr["Unique Leads"] * 100 if cr["Unique Leads"] else 0
             html += (f'<tr class="{tid}-camp" style="display:none;background:#f5f8ff;border-bottom:1px solid #eff0f6">' +
                      f'<td style="padding-left:28px;color:#111827;font-weight:400;font-size:11.5px">{cr["Campaign"]}</td>' +
                      f'<td style="font-size:11.5px">{int(cr["Unique Leads"])}</td>' +
                      f'<td style="font-size:11.5px">{int(cr["New Leads"])}</td>' +
                      f'<td style="font-size:11.5px">{int(cr["Appointments"])}</td>' +
-                     f'<td style="font-size:11.5px">{int(cr["Quote"])}</td>' +
+                     f'<td style="font-size:11.5px">{int(cr.get("Quote",0))}</td>' +
                      f'<td style="font-size:11.5px">{int(cr["Customers"])}</td>' +
                      f'<td style="font-size:11.5px">{fc(cr["Sales Amount ($)"])}</td>' +
-                     f'<td style="font-size:11.5px">{int(cr["NL Customers"])}</td>' +
-                     f'<td style="font-size:11.5px">{fc(cr["NL Sales ($)"])}</td>' +
                      f'<td>{bar(c_leads_pct, "#1877F2")}</td>' +
                      f'<td>{bar(c_sales_pct, "#22c55e")}</td>' +
                      f'<td style="font-size:11.5px">{c_apt_leads:.1f}%</td>' +
-                     f'<td style="font-size:11.5px">{c_ord_apt:.0f}%</td>' +
                      f'<td style="font-size:11.5px">{c_ord_leads:.2f}%</td></tr>')
 
     html += """</tbody></table></div>
