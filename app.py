@@ -398,10 +398,13 @@ if st.session_state.page == "overview":
         tb["Cost/APT"] = raw.apply(lambda r: fc(r["Spend ($)"]/r["Appointments"]) if pd.notna(r.get("Appointments")) and r["Appointments"]>0 else "—", axis=1)
         tb["APT/Leads"] = raw.apply(lambda r: f'{r["Appointments"]/r["CRM Leads"]*100:.1f}%' if pd.notna(r.get("CRM Leads")) and r["CRM Leads"]>0 and pd.notna(r.get("Appointments")) and r["Appointments"]>0 else "—", axis=1)
         tb["Spend ($)"]=tb["Spend ($)"].apply(fc)
-        for col in ["CRM Leads","Conversions","Customers"]: tb[col]=tb[col].apply(lambda x:fn(x) if x>0 else "—")
-        tb["Appointments"]=tb["Appointments"].apply(fn)
-        tb["Sales Amount ($)"]=tb["Sales Amount ($)"].apply(lambda x:fc(x) if x>0 else "—")
-        tb["ROAS"]=tb["ROAS"].apply(lambda x:f"{x:.1f}x" if x>0 else "—")
+        for col in ["CRM Leads","Customers"]:
+            if col in tb.columns:
+                tb[col]=tb[col].apply(lambda x:fn(x) if x>0 else "—")
+        if "Appointments" in tb.columns:
+            tb["Appointments"]=tb["Appointments"].apply(fn)
+        if "Sales Amount ($)" in tb.columns:
+            tb["Sales Amount ($)"]=tb["Sales Amount ($)"].apply(lambda x:fc(x) if x>0 else "—")
         st.dataframe(tb,use_container_width=True,hide_index=True,height=180); st.markdown(sb_c(),unsafe_allow_html=True)
 
 # ── PAGE 2 ─────────────────────────────────────────────────────────────────────
@@ -620,22 +623,24 @@ elif st.session_state.page == "trends":
         "ROAS": f'{tot["Sales Amount ($)"]/tot["Spend ($)"]:.1f}x' if tot["Spend ($)"]>0 else "—",
     }
 
-    disp = tb[["Campaign Objective","Spend ($)","CRM Leads","Cost/Lead",
-               "Appointments","APT/Lead","Customers","Order/APT","Sales Amount ($)","ROAS"]].copy()
+    avail_cols = [c for c in ["Campaign Objective","Spend ($)","CRM Leads","Cost/Lead","Appointments","APT/Lead","Customers","Order/APT","Sales Amount ($)"] if c in tb.columns]
+    disp = tb[avail_cols].copy()
     disp["Spend ($)"]       = disp["Spend ($)"].apply(fc)
     disp["CRM Leads"]       = disp["CRM Leads"].apply(fn)
     disp["Appointments"]    = disp["Appointments"].apply(fn)
     disp["Customers"]       = disp["Customers"].apply(fn)
     disp["Sales Amount ($)"]= disp["Sales Amount ($)"].apply(fc)
-    disp["ROAS"]            = disp["ROAS"].apply(lambda x: f"{x:.1f}x" if isinstance(x,float) and x>0 else "—")
-    disp.columns = ["Campaign","Cost","Leads","Cost/Lead","APT","APT/Lead","Customers","Order/APT","Sales","ROAS"]
+    if "ROAS" in disp.columns:
+        disp["ROAS"] = disp["ROAS"].apply(lambda x: f"{x:.1f}x" if isinstance(x,float) and x>0 else "—")
+    col_rename = {"Campaign Objective":"Campaign","Spend ($)":"Cost","CRM Leads":"Leads","Appointments":"APT","Sales Amount ($)":"Sales"}
+    disp = disp.rename(columns=col_rename)
 
     total_disp = pd.DataFrame([{
         "Campaign":"Total","Cost":total_row["Spend ($)"],
         "Leads":total_row["CRM Leads"],"Cost/Lead":total_row["Cost/Lead"],
         "APT":total_row["Appointments"],"APT/Lead":total_row["APT/Lead"],
         "Customers":total_row["Customers"],"Order/APT":total_row["Order/APT"],
-        "Sales":total_row["Sales Amount ($)"],"ROAS":total_row["ROAS"]}])
+        "Sales":total_row["Sales Amount ($)"]}])
     disp = pd.concat([total_disp, disp], ignore_index=True)
 
     st.dataframe(disp, use_container_width=True, hide_index=True, height=220)
@@ -643,8 +648,8 @@ elif st.session_state.page == "trends":
     # ── Campaign selector + trend chart ───────────────────────────
 
 
-    metric_opts   = ["Spend ($)","CRM Leads","Conversions","Appointments","Customers","Sales Amount ($)","ROAS"]
-    metric_labels = ["Spend","Leads","Conversions","APT","Customers","Sales","ROAS"]
+    metric_opts   = ["Spend ($)","CRM Leads","Appointments","Customers","Sales Amount ($)"]
+    metric_labels = ["Spend","Leads","APT","Customers","Sales"]
 
     if "trend_metric" not in st.session_state:
         st.session_state.trend_metric = "CRM Leads"
