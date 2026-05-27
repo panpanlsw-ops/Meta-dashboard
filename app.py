@@ -209,7 +209,10 @@ try:
             ["CRM Leads","Appointments","Customers",
              "Sales Amount ($)","Spend ($)","Year","Month"])
 
-except: data={}
+except Exception as e:
+    data={}
+    st.error(f"❌ Error loading data: {e}")
+    st.stop()
 
 camp_list = ["All"]
 if "Campaign Performance" in data:
