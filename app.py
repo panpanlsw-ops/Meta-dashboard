@@ -391,13 +391,13 @@ if st.session_state.page == "overview":
             f3.update_layout(height=220,margin=dict(t=0,b=0,l=0,r=65),showlegend=False,paper_bgcolor="white",plot_bgcolor="white",xaxis=dict(showgrid=False,visible=False),yaxis=dict(showgrid=False))
             st.plotly_chart(f3,use_container_width=True); st.markdown(sb_c(),unsafe_allow_html=True)
         st.markdown(sh(f"📋 Campaign Breakdown — {sel}")+sb_o(),unsafe_allow_html=True)
-        show=["Campaign Objective","Spend ($)","Impressions","Clicks","CRM Leads","Conversions","Appointments","Customers","Sales Amount ($)","ROAS"]
+        show=["Campaign Objective","Spend ($)","CRM Leads","Appointments","Customers","Sales Amount ($)","ROI","APT/Lead"]
         tb=fd[[c for c in show if c in fd.columns]].copy()
         # Compute Cost/APT and APT/Leads before formatting
         raw = fd.copy()
         tb["Cost/APT"] = raw.apply(lambda r: fc(r["Spend ($)"]/r["Appointments"]) if pd.notna(r.get("Appointments")) and r["Appointments"]>0 else "—", axis=1)
         tb["APT/Leads"] = raw.apply(lambda r: f'{r["Appointments"]/r["CRM Leads"]*100:.1f}%' if pd.notna(r.get("CRM Leads")) and r["CRM Leads"]>0 and pd.notna(r.get("Appointments")) and r["Appointments"]>0 else "—", axis=1)
-        for col,func in [("Spend ($)",fc),("Impressions",fn),("Clicks",fn)]: tb[col]=tb[col].apply(func)
+        tb["Spend ($)"]=tb["Spend ($)"].apply(fc)
         for col in ["CRM Leads","Conversions","Customers"]: tb[col]=tb[col].apply(lambda x:fn(x) if x>0 else "—")
         tb["Appointments"]=tb["Appointments"].apply(fn)
         tb["Sales Amount ($)"]=tb["Sales Amount ($)"].apply(lambda x:fc(x) if x>0 else "—")
@@ -570,7 +570,11 @@ elif st.session_state.page == "territory":
     </script>"""
     import streamlit.components.v1 as components
     n_terr = len(terr)
-    n_camp = sum(len(tdf[tdf["Territory"]==r["Territory"]]["Campaign"].unique()) for _,r in terr.iterrows())
+    t_det = data.get("Territory Detail", pd.DataFrame())
+    if not t_det.empty and "Campaign" in t_det.columns:
+        n_camp = sum(len(t_det[t_det["Territory"]==r["Territory"]]["Campaign"].unique()) for _,r in terr.iterrows())
+    else:
+        n_camp = 0
     tbl_height = max(500, (n_terr + 2) * 38 + n_camp * 34)
     components.html(html, height=tbl_height, scrolling=True)
 
@@ -604,7 +608,7 @@ elif st.session_state.page == "trends":
     tot = camp_df.sum(numeric_only=True)
     total_row = {
         "Campaign Objective": "Total",
-        "Clicks": fn(tot["Clicks"]),
+
         "Spend ($)": fc(tot["Spend ($)"]),
         "CRM Leads": fn(tot["CRM Leads"]),
         "Cost/Lead": fc(tot["Spend ($)"]/tot["CRM Leads"]) if tot["CRM Leads"]>0 else "—",
@@ -616,19 +620,18 @@ elif st.session_state.page == "trends":
         "ROAS": f'{tot["Sales Amount ($)"]/tot["Spend ($)"]:.1f}x' if tot["Spend ($)"]>0 else "—",
     }
 
-    disp = tb[["Campaign Objective","Clicks","Spend ($)","CRM Leads","Cost/Lead",
+    disp = tb[["Campaign Objective","Spend ($)","CRM Leads","Cost/Lead",
                "Appointments","APT/Lead","Customers","Order/APT","Sales Amount ($)","ROAS"]].copy()
-    disp["Clicks"]          = disp["Clicks"].apply(fn)
     disp["Spend ($)"]       = disp["Spend ($)"].apply(fc)
     disp["CRM Leads"]       = disp["CRM Leads"].apply(fn)
     disp["Appointments"]    = disp["Appointments"].apply(fn)
     disp["Customers"]       = disp["Customers"].apply(fn)
     disp["Sales Amount ($)"]= disp["Sales Amount ($)"].apply(fc)
     disp["ROAS"]            = disp["ROAS"].apply(lambda x: f"{x:.1f}x" if isinstance(x,float) and x>0 else "—")
-    disp.columns = ["Campaign","Clicks","Cost","Leads","Cost/Lead","APT","APT/Lead","Customers","Order/APT","Sales","ROAS"]
+    disp.columns = ["Campaign","Cost","Leads","Cost/Lead","APT","APT/Lead","Customers","Order/APT","Sales","ROAS"]
 
     total_disp = pd.DataFrame([{
-        "Campaign":"Total","Clicks":total_row["Clicks"],"Cost":total_row["Spend ($)"],
+        "Campaign":"Total","Cost":total_row["Spend ($)"],
         "Leads":total_row["CRM Leads"],"Cost/Lead":total_row["Cost/Lead"],
         "APT":total_row["Appointments"],"APT/Lead":total_row["APT/Lead"],
         "Customers":total_row["Customers"],"Order/APT":total_row["Order/APT"],
@@ -672,8 +675,8 @@ elif st.session_state.page == "trends":
 
     if st.session_state.trend_gran == "Monthly" and has_year and has_month:
         agg = chart_df.groupby(["Year","Month"]).agg({
-            "Spend ($)":"sum","CRM Leads":"sum","Conversions":"sum",
-            "Appointments":"sum","Customers":"sum","Sales Amount ($)":"sum","ROAS":"mean"
+            col:"sum" for col in ["Spend ($)","CRM Leads","Appointments","Customers","Sales Amount ($)"]
+            if col in chart_df.columns
         }).reset_index()
         agg["Period"] = pd.to_datetime(
             agg.apply(lambda r: f"{int(r['Year'])}-{int(r['Month']):02d}-01", axis=1))
