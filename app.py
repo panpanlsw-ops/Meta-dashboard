@@ -680,25 +680,42 @@ elif st.session_state.page == "trends":
         st.session_state.trend_metric = "CRM Leads"
 
     st.markdown("<style>.stSelectbox>div>div{background:white!important;color:#111827!important}</style>", unsafe_allow_html=True)
-    metric_col, _ = st.columns([2, 5])
-    with metric_col:
+
+    # Campaign selector + metric selector side by side
+    cc1, cc2 = st.columns([3, 2])
+    with cc1:
+        camp_opts_trends = ["All Campaigns"] + sorted(
+            data["Campaign Performance"]["Campaign Objective"].dropna().unique().tolist()
+        ) if "Campaign Performance" in data else ["All Campaigns"]
+        sel_trend_camp = st.selectbox(
+            "Campaign", camp_opts_trends,
+            label_visibility="collapsed",
+            key="trend_camp_sel")
+
+    with cc2:
         sel_metric_lbl = st.selectbox(
             "Metric", metric_labels,
             index=metric_labels.index(
                 metric_labels[metric_opts.index(st.session_state.trend_metric)]
                 if st.session_state.trend_metric in metric_opts else 1),
-            label_visibility="visible",
+            label_visibility="collapsed",
             key="trend_metric_sel")
     metric = metric_opts[metric_labels.index(sel_metric_lbl)]
     st.session_state.trend_metric = metric
 
     # Always monthly granularity — date range controlled by sidebar
-    if "trend_gran" not in st.session_state: st.session_state.trend_gran = "Monthly" 
+    if "trend_gran" not in st.session_state: st.session_state.trend_gran = "Monthly"
 
-    # Filter by campaign from sidebar
-    chart_df = camp_df.copy()
-    if sel_camp != "All" and "Campaign Objective" in chart_df.columns:
-        chart_df = chart_df[chart_df["Campaign Objective"] == sel_camp]
+    # Filter by selected campaign — All = overall trend
+    chart_df = data["Campaign Performance"].copy()
+    if "Year" in chart_df.columns and "Month" in chart_df.columns:
+        chart_df["Year"]  = pd.to_numeric(chart_df["Year"],  errors="coerce").fillna(0).astype(int)
+        chart_df["Month"] = pd.to_numeric(chart_df["Month"], errors="coerce").fillna(0).astype(int)
+    if sel_trend_camp != "All Campaigns" and "Campaign Objective" in chart_df.columns:
+        chart_df = chart_df[chart_df["Campaign Objective"] == sel_trend_camp]
+        chart_title = sel_trend_camp
+    else:
+        chart_title = "All Campaigns" 
 
     # Aggregate
     has_year  = "Year"  in chart_df.columns and len(chart_df) > 0
@@ -713,10 +730,8 @@ elif st.session_state.page == "trends":
             agg.apply(lambda r: f"{int(r['Year'])}-{int(r['Month']):02d}-01", axis=1))
         x_col = "Period"
     elif has_year:
-        agg = chart_df.groupby("Year").agg({
-            "Spend ($)":"sum","CRM Leads":"sum","Conversions":"sum",
-            "Appointments":"sum","Customers":"sum","Sales Amount ($)":"sum","ROAS":"mean"
-        }).reset_index()
+        agg_cols = {c:"sum" for c in ["Spend ($)","CRM Leads","Appointments","Customers","Sales Amount ($)"] if c in chart_df.columns}
+        agg = chart_df.groupby("Year").agg(agg_cols).reset_index()
         agg["Period"] = agg["Year"].astype(str)
         x_col = "Period"
     else:
@@ -731,6 +746,7 @@ elif st.session_state.page == "trends":
         fig.add_trace(go.Scatter(
             x=agg[x_col], y=agg[metric],
             mode="lines+markers",
+            name=chart_title,
             line=dict(color="#1877F2", width=2),
             marker=dict(size=5),
             fill="tozeroy",
@@ -738,7 +754,8 @@ elif st.session_state.page == "trends":
             hovertemplate=f"<b>%{{x}}</b><br>{metric}: %{{y:,.1f}}<extra></extra>"
         ))
         fig.update_layout(
-            height=280,
+            height=300,
+            title=dict(text=f"{chart_title} — {sel_metric_lbl}", font=dict(size=13), x=0),
             margin=dict(t=10,b=40,l=55,r=20),
             paper_bgcolor="white", plot_bgcolor="white",
             xaxis=dict(showgrid=False),
