@@ -267,8 +267,10 @@ with st.sidebar:
     tc1, tc2 = st.columns(2)
     to_month = tc1.selectbox("TM", MONTHS, index=len(MONTHS)-1, label_visibility="collapsed", key="to_month")
     to_year  = tc2.selectbox("TY", all_years, index=len(all_years)-1, label_visibility="collapsed", key="to_year")
-    from_m = MONTHS.index(from_month) + 1
-    to_m   = MONTHS.index(to_month) + 1
+    from_m    = MONTHS.index(from_month) + 1
+    to_m      = MONTHS.index(to_month) + 1
+    from_year = int(from_year)
+    to_year   = int(to_year)
 
     st.markdown("---")
     st.markdown("**VIEWS**")
