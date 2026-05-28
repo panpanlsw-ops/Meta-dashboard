@@ -537,16 +537,26 @@ elif st.session_state.page == "territory":
                  f'<td>{int(r["Unique Leads"])}</td><td>{int(r["New Leads"])}</td>' +
                  f'<td>{int(r["Appointments"])}</td><td>{int(r["Quote"])}</td>' +
                  f'<td>{int(r["Customers"])}</td><td>{fc(r["Sales Amount ($)"])}</td>' +
-                 f'<td>{bar(float(str(r.get("Leads %",0)).replace("%","")), "#1877F2")}</td>' +
-                 f'<td>{bar(float(str(r.get("Sales %",0)).replace("%","")), "#22c55e")}</td>' +
+                 f'<td>{bar(min(100,float(str(r.get("Leads %",0)).replace("%","").replace(",","").strip() or 0)), "#1877F2")}</td>' +
+                 f'<td>{bar(min(100,float(str(r.get("Sales %",0)).replace("%","").replace(",","").strip() or 0)), "#22c55e")}</td>' +
                  f'<td>{str(r.get("APT/Leads","0%"))}</td>' +
                  f'<td>{str(r.get("Order/Leads","0%"))}</td></tr>')
 
         # Campaign breakdown
-        # Use Territory Detail for campaign breakdown
+        # Use Territory Detail filtered by date range
         t_detail = data.get("Territory Detail", pd.DataFrame())
         if not t_detail.empty and "Territory" in t_detail.columns:
-            camp_data = t_detail[t_detail["Territory"] == r["Territory"]].groupby("Campaign").agg({
+            t_det = t_detail.copy()
+            if "Year" in t_det.columns and "Month" in t_det.columns:
+                t_det["Year"]  = pd.to_numeric(t_det["Year"],  errors="coerce").fillna(0).astype(int)
+                t_det["Month"] = pd.to_numeric(t_det["Month"], errors="coerce").fillna(0).astype(int)
+                t_det = t_det[
+                    ((t_det["Year"] > from_year) |
+                     ((t_det["Year"] == from_year) & (t_det["Month"] >= from_m))) &
+                    ((t_det["Year"] < to_year) |
+                     ((t_det["Year"] == to_year) & (t_det["Month"] <= to_m)))
+                ]
+            camp_data = t_det[t_det["Territory"] == r["Territory"]].groupby("Campaign").agg({
                 "Unique Leads":"sum","New Leads":"sum","Appointments":"sum",
                 "Quote":"sum","Customers":"sum","Sales Amount ($)":"sum"
             }).reset_index().sort_values("Unique Leads", ascending=False)
