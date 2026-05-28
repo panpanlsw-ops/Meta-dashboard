@@ -610,33 +610,30 @@ elif st.session_state.page == "trends":
     if "Campaign Performance" not in data:
         st.warning("No Campaign Performance sheet found."); st.stop()
 
-    camp_df = data["Campaign Performance"].copy()
+    # Full dataset for chart (all months)
+    full_df = data["Campaign Performance"].copy()
+    full_df["Year"]  = pd.to_numeric(full_df["Year"],  errors="coerce").fillna(0).astype(int)
+    full_df["Month"] = pd.to_numeric(full_df["Month"], errors="coerce").fillna(0).astype(int)
 
-    # Apply Month/Year filter
-    if "Year" in camp_df.columns and "Month" in camp_df.columns:
-        camp_df["Year"] = pd.to_numeric(camp_df["Year"], errors="coerce").fillna(0).astype(int)
-        camp_df["Month"] = pd.to_numeric(camp_df["Month"], errors="coerce").fillna(0).astype(int)
-        camp_df = camp_df[
-            ((camp_df["Year"] > from_year) |
-             ((camp_df["Year"] == from_year) & (camp_df["Month"] >= from_m))) &
-            ((camp_df["Year"] < to_year) |
-             ((camp_df["Year"] == to_year) & (camp_df["Month"] <= to_m)))
-        ]
+    # Date-filtered dataset for summary table
+    camp_df = full_df[
+        ((full_df["Year"] > from_year) |
+         ((full_df["Year"] == from_year) & (full_df["Month"] >= from_m))) &
+        ((full_df["Year"] < to_year) |
+         ((full_df["Year"] == to_year) & (full_df["Month"] <= to_m)))
+    ].copy()
 
-    # ── Summary table ─────────────────────────────────────────────
-
-
-    # Build display table
-    tb = camp_df.copy()
-    tb["Cost/Lead"]  = tb.apply(lambda r: fc(r["Spend ($)"]/r["CRM Leads"]) if r.get("CRM Leads",0)>0 else "—", axis=1)
-    tb["APT/Lead"]   = tb.apply(lambda r: f'{r["Appointments"]/r["CRM Leads"]*100:.1f}%' if r.get("CRM Leads",0)>0 and r.get("Appointments",0)>0 else "—", axis=1)
-    tb["Order/APT"]  = tb.apply(lambda r: f'{r["Customers"]/r["Appointments"]*100:.1f}%' if r.get("Appointments",0)>0 else "—", axis=1)
+    # Aggregate by campaign for table (one row per campaign)
+    agg_cols = {c:"sum" for c in ["Spend ($)","CRM Leads","Appointments","Customers","Sales Amount ($)"] if c in camp_df.columns}
+    camp_agg = camp_df.groupby("Campaign Objective").agg(agg_cols).reset_index()
+    camp_agg["Cost/Lead"]  = camp_agg.apply(lambda r: fc(r["Spend ($)"]/r["CRM Leads"]) if r["CRM Leads"]>0 else "—", axis=1)
+    camp_agg["APT/Lead"]   = camp_agg.apply(lambda r: f'{r["Appointments"]/r["CRM Leads"]*100:.1f}%' if r["CRM Leads"]>0 and r["Appointments"]>0 else "—", axis=1)
+    camp_agg["Order/APT"]  = camp_agg.apply(lambda r: f'{r["Customers"]/r["Appointments"]*100:.1f}%' if r["Appointments"]>0 else "—", axis=1)
 
     # Total row
     tot = camp_df.sum(numeric_only=True)
     total_row = {
-        "Campaign Objective": "Total",
-
+        "Campaign Objective":"Total",
         "Spend ($)": fc(tot["Spend ($)"]),
         "CRM Leads": fn(tot["CRM Leads"]),
         "Cost/Lead": fc(tot["Spend ($)"]/tot["CRM Leads"]) if tot["CRM Leads"]>0 else "—",
@@ -645,122 +642,91 @@ elif st.session_state.page == "trends":
         "Customers": fn(tot["Customers"]),
         "Order/APT": f'{tot["Customers"]/tot["Appointments"]*100:.1f}%' if tot["Appointments"]>0 else "—",
         "Sales Amount ($)": fc(tot["Sales Amount ($)"]),
-        "ROAS": f'{tot["Sales Amount ($)"]/tot["Spend ($)"]:.1f}x' if tot["Spend ($)"]>0 else "—",
     }
 
-    avail_cols = [c for c in ["Campaign Objective","Spend ($)","CRM Leads","Cost/Lead","Appointments","APT/Lead","Customers","Order/APT","Sales Amount ($)"] if c in tb.columns]
-    disp = tb[avail_cols].copy()
-    disp["Spend ($)"]       = disp["Spend ($)"].apply(fc)
-    disp["CRM Leads"]       = disp["CRM Leads"].apply(fn)
-    disp["Appointments"]    = disp["Appointments"].apply(fn)
-    disp["Customers"]       = disp["Customers"].apply(fn)
-    disp["Sales Amount ($)"]= disp["Sales Amount ($)"].apply(fc)
-    if "ROAS" in disp.columns:
-        disp["ROAS"] = disp["ROAS"].apply(lambda x: f"{x:.1f}x" if isinstance(x,float) and x>0 else "—")
+    # Format display table
+    disp = camp_agg.copy()
+    disp["Spend ($)"]        = disp["Spend ($)"].apply(fc)
+    disp["CRM Leads"]        = disp["CRM Leads"].apply(fn)
+    disp["Appointments"]     = disp["Appointments"].apply(fn)
+    disp["Customers"]        = disp["Customers"].apply(fn)
+    disp["Sales Amount ($)"] = disp["Sales Amount ($)"].apply(fc)
     col_rename = {"Campaign Objective":"Campaign","Spend ($)":"Cost","CRM Leads":"Leads","Appointments":"APT","Sales Amount ($)":"Sales"}
     disp = disp.rename(columns=col_rename)
+    disp = disp[["Campaign","Cost","Leads","Cost/Lead","APT","APT/Lead","Customers","Order/APT","Sales"]]
 
     total_disp = pd.DataFrame([{
-        "Campaign":"Total","Cost":total_row["Spend ($)"],
-        "Leads":total_row["CRM Leads"],"Cost/Lead":total_row["Cost/Lead"],
-        "APT":total_row["Appointments"],"APT/Lead":total_row["APT/Lead"],
-        "Customers":total_row["Customers"],"Order/APT":total_row["Order/APT"],
-        "Sales":total_row["Sales Amount ($)"]}])
+        "Campaign":"Total","Cost":total_row["Spend ($)"],"Leads":total_row["CRM Leads"],
+        "Cost/Lead":total_row["Cost/Lead"],"APT":total_row["Appointments"],
+        "APT/Lead":total_row["APT/Lead"],"Customers":total_row["Customers"],
+        "Order/APT":total_row["Order/APT"],"Sales":total_row["Sales Amount ($)"]}])
     disp = pd.concat([total_disp, disp], ignore_index=True)
 
-    st.dataframe(disp, use_container_width=True, hide_index=True, height=min(400, (len(disp)+1)*35+40))
+    st.markdown("<p style='font-size:0.78rem;color:#6b7280;margin-bottom:6px'>Click a campaign row to see its monthly trend.</p>", unsafe_allow_html=True)
+    st.dataframe(disp, use_container_width=True, hide_index=True,
+                 height=min(600, (len(disp)+1)*35+40),
+                 on_select="rerun", selection_mode="single-row",
+                 key="trends_table")
 
-    # ── Campaign selector + trend chart ───────────────────────────
+    # Get selected campaign
+    sel_idx = None
+    if "trends_table" in st.session_state and st.session_state.trends_table:
+        rows = st.session_state.trends_table.get("selection",{}).get("rows",[])
+        if rows:
+            sel_idx = rows[0]
 
+    # Determine which campaign to chart
+    if sel_idx is not None and sel_idx > 0:  # 0 = Total row
+        sel_camp_name = disp.iloc[sel_idx]["Campaign"]
+        chart_df = full_df[full_df["Campaign Objective"] == sel_camp_name].copy()
+        chart_title = sel_camp_name
+    else:
+        chart_df = full_df.copy()
+        chart_title = "All Campaigns"
 
+    # Metric selector
     metric_opts   = ["Spend ($)","CRM Leads","Appointments","Customers","Sales Amount ($)"]
     metric_labels = ["Spend","Leads","APT","Customers","Sales"]
-
     if "trend_metric" not in st.session_state:
         st.session_state.trend_metric = "CRM Leads"
 
     st.markdown("<style>.stSelectbox>div>div{background:white!important;color:#111827!important}</style>", unsafe_allow_html=True)
-
-    # Campaign selector + metric selector side by side
-    cc1, cc2 = st.columns([3, 2])
-    with cc1:
-        camp_opts_trends = ["All Campaigns"] + sorted(
-            data["Campaign Performance"]["Campaign Objective"].dropna().unique().tolist()
-        ) if "Campaign Performance" in data else ["All Campaigns"]
-        sel_trend_camp = st.selectbox(
-            "Campaign", camp_opts_trends,
-            label_visibility="collapsed",
-            key="trend_camp_sel")
-
-    with cc2:
-        sel_metric_lbl = st.selectbox(
-            "Metric", metric_labels,
-            index=metric_labels.index(
-                metric_labels[metric_opts.index(st.session_state.trend_metric)]
-                if st.session_state.trend_metric in metric_opts else 1),
-            label_visibility="collapsed",
-            key="trend_metric_sel")
+    mc, _ = st.columns([2,5])
+    sel_metric_lbl = mc.selectbox("Metric", metric_labels,
+        index=metric_labels.index(metric_labels[metric_opts.index(st.session_state.trend_metric)]
+            if st.session_state.trend_metric in metric_opts else 1),
+        label_visibility="collapsed", key="trend_metric_sel")
     metric = metric_opts[metric_labels.index(sel_metric_lbl)]
     st.session_state.trend_metric = metric
 
-    # Always monthly granularity — date range controlled by sidebar
-    if "trend_gran" not in st.session_state: st.session_state.trend_gran = "Monthly"
-
-    # Filter by selected campaign — All = overall trend
-    chart_df = data["Campaign Performance"].copy()
-    if "Year" in chart_df.columns and "Month" in chart_df.columns:
-        chart_df["Year"]  = pd.to_numeric(chart_df["Year"],  errors="coerce").fillna(0).astype(int)
-        chart_df["Month"] = pd.to_numeric(chart_df["Month"], errors="coerce").fillna(0).astype(int)
-    if sel_trend_camp != "All Campaigns" and "Campaign Objective" in chart_df.columns:
-        chart_df = chart_df[chart_df["Campaign Objective"] == sel_trend_camp]
-        chart_title = sel_trend_camp
-    else:
-        chart_title = "All Campaigns" 
-
-    # Aggregate
-    has_year  = "Year"  in chart_df.columns and len(chart_df) > 0
-    has_month = "Month" in chart_df.columns and len(chart_df) > 0
-
-    if st.session_state.trend_gran == "Monthly" and has_year and has_month:
-        agg = chart_df.groupby(["Year","Month"]).agg({
-            col:"sum" for col in ["Spend ($)","CRM Leads","Appointments","Customers","Sales Amount ($)"]
-            if col in chart_df.columns
-        }).reset_index()
+    # Aggregate monthly
+    if "Year" in chart_df.columns and "Month" in chart_df.columns and len(chart_df) > 0:
+        agg_c = {c:"sum" for c in metric_opts if c in chart_df.columns}
+        agg = chart_df.groupby(["Year","Month"]).agg(agg_c).reset_index()
         agg["Period"] = pd.to_datetime(
             agg.apply(lambda r: f"{int(r['Year'])}-{int(r['Month']):02d}-01", axis=1))
-        x_col = "Period"
-    elif has_year:
-        agg_cols = {c:"sum" for c in ["Spend ($)","CRM Leads","Appointments","Customers","Sales Amount ($)"] if c in chart_df.columns}
-        agg = chart_df.groupby("Year").agg(agg_cols).reset_index()
-        agg["Period"] = agg["Year"].astype(str)
-        x_col = "Period"
-    else:
-        st.info("Campaign Performance data does not have Year/Month columns.")
-        agg = pd.DataFrame()
-        x_col = "Period" 
+        agg = agg.sort_values("Period")
 
-    if len(agg) == 0:
-        st.info("No data available for selected filters.")
-    else:
         fig = go.Figure()
         fig.add_trace(go.Scatter(
-            x=agg[x_col], y=agg[metric],
+            x=agg["Period"], y=agg[metric],
             mode="lines+markers",
-            name=chart_title,
             line=dict(color="#1877F2", width=2),
             marker=dict(size=5),
             fill="tozeroy",
             fillcolor="rgba(24,119,242,0.08)",
-            hovertemplate=f"<b>%{{x}}</b><br>{metric}: %{{y:,.1f}}<extra></extra>"
+            hovertemplate=f"<b>%{{x|%b %Y}}</b><br>{sel_metric_lbl}: %{{y:,.0f}}<extra></extra>"
         ))
         fig.update_layout(
             height=300,
-            title=dict(text=f"{chart_title} — {sel_metric_lbl}", font=dict(size=13), x=0),
-            margin=dict(t=10,b=40,l=55,r=20),
+            title=dict(text=f"{chart_title} — {sel_metric_lbl}", font=dict(size=13,color="#111827"), x=0),
+            margin=dict(t=40,b=40,l=55,r=20),
             paper_bgcolor="white", plot_bgcolor="white",
-            xaxis=dict(showgrid=False),
+            xaxis=dict(showgrid=False, tickformat="%b %Y"),
             yaxis=dict(showgrid=True, gridcolor="#f3f4f6"),
-            hovermode="x unified",
-            showlegend=False
+            hovermode="x unified", showlegend=False
         )
         st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("No data available.")
+
