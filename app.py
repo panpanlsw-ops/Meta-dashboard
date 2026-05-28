@@ -648,6 +648,14 @@ elif st.session_state.page == "trends":
     camp_agg["Order/APT"]  = camp_agg.apply(lambda r: f'{r["Customers"]/r["Appointments"]*100:.1f}%' if r["Appointments"]>0 else "—", axis=1)
     camp_agg["ROI"]        = camp_agg.apply(lambda r: f'{(r["Sales Amount ($)"]-r["Spend ($)"])/r["Spend ($)"]*100:.1f}%' if r["Spend ($)"]>0 else "—", axis=1)
 
+    # Sort by CRM Leads desc, then Sales Amount desc, then ROI desc
+    camp_agg["_roi_sort"] = camp_agg.apply(
+        lambda r: (r["Sales Amount ($)"]-r["Spend ($)"])/r["Spend ($)"]*100 if r["Spend ($)"]>0 else 0, axis=1)
+    camp_agg = camp_agg.sort_values(
+        ["CRM Leads","Sales Amount ($)","_roi_sort"],
+        ascending=[False,False,False]
+    ).drop(columns=["_roi_sort"]).reset_index(drop=True)
+
     # Total row
     tot = camp_df.sum(numeric_only=True)
     total_row = {
