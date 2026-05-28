@@ -247,9 +247,8 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("**FILTERS**")
-    sel_camp = st.selectbox("Campaign", camp_list)
-    sel_off  = st.selectbox("Office / Territory", off_list)
+    sel_camp = "All"
+    sel_off  = "All"
     date_range = None
     MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
     all_years = []
@@ -356,7 +355,9 @@ if st.session_state.page == "overview":
         camp_df=data["Campaign Performance"].copy()
         # Filter by date range
         if "Year" in camp_df.columns and "Month" in camp_df.columns:
-            camp_df = camp_df[
+            camp_df["Year"] = pd.to_numeric(camp_df["Year"], errors="coerce").fillna(0).astype(int)
+        camp_df["Month"] = pd.to_numeric(camp_df["Month"], errors="coerce").fillna(0).astype(int)
+        camp_df = camp_df[
                 ((camp_df["Year"] > from_year) |
                  ((camp_df["Year"] == from_year) & (camp_df["Month"] >= from_m))) &
                 ((camp_df["Year"] < to_year) |
@@ -419,6 +420,8 @@ elif st.session_state.page == "territory":
     tdf = raw.copy()
     # Filter by date range
     if "Year" in tdf.columns and "Month" in tdf.columns:
+        tdf["Year"] = pd.to_numeric(tdf["Year"], errors="coerce").fillna(0).astype(int)
+        tdf["Month"] = pd.to_numeric(tdf["Month"], errors="coerce").fillna(0).astype(int)
         tdf = tdf[
             ((tdf["Year"] > from_year) |
              ((tdf["Year"] == from_year) & (tdf["Month"] >= from_m))) &
@@ -591,6 +594,8 @@ elif st.session_state.page == "trends":
 
     # Apply Month/Year filter
     if "Year" in camp_df.columns and "Month" in camp_df.columns:
+        camp_df["Year"] = pd.to_numeric(camp_df["Year"], errors="coerce").fillna(0).astype(int)
+        camp_df["Month"] = pd.to_numeric(camp_df["Month"], errors="coerce").fillna(0).astype(int)
         camp_df = camp_df[
             ((camp_df["Year"] > from_year) |
              ((camp_df["Year"] == from_year) & (camp_df["Month"] >= from_m))) &
@@ -643,7 +648,7 @@ elif st.session_state.page == "trends":
         "Sales":total_row["Sales Amount ($)"]}])
     disp = pd.concat([total_disp, disp], ignore_index=True)
 
-    st.dataframe(disp, use_container_width=True, hide_index=True, height=220)
+    st.dataframe(disp, use_container_width=True, hide_index=True, height=min(400, (len(disp)+1)*35+40))
 
     # ── Campaign selector + trend chart ───────────────────────────
 
@@ -654,6 +659,7 @@ elif st.session_state.page == "trends":
     if "trend_metric" not in st.session_state:
         st.session_state.trend_metric = "CRM Leads"
 
+    st.markdown("<style>.stSelectbox>div>div{background:white!important;color:#111827!important}</style>", unsafe_allow_html=True)
     metric_col, _ = st.columns([2, 5])
     with metric_col:
         sel_metric_lbl = st.selectbox(
