@@ -662,19 +662,73 @@ elif st.session_state.page == "trends":
         "Order/APT":total_row["Order/APT"],"Sales":total_row["Sales Amount ($)"]}])
     disp = pd.concat([total_disp, disp], ignore_index=True)
 
-    st.dataframe(disp, use_container_width=True, hide_index=True,
-                 height=min(600, (len(disp)+1)*35+40))
+    # ── Clickable HTML table ─────────────────────────────────────
+    import streamlit.components.v1 as components
 
-    # Campaign selector below table
-    camp_names = ["All Campaigns"] + camp_agg["Campaign Objective"].tolist()
-    sel_camp_name = st.selectbox(
-        "Select campaign to view trend:",
-        camp_names,
-        key="trend_camp_select"
+    tbl_html = """
+    <style>
+    body{margin:0;font-family:-apple-system,sans-serif}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    thead tr{background:#111827}
+    thead th{color:white;padding:9px 10px;text-align:left;font-weight:500;font-size:11px;letter-spacing:.04em;white-space:nowrap}
+    tbody tr{border-bottom:1px solid #e5e7eb;cursor:pointer}
+    tbody tr:hover td{background:#f0f7ff}
+    tbody tr.selected td{background:#dbeafe!important;font-weight:500}
+    tbody tr.total-row td{background:#f8fafc;font-weight:500}
+    tbody td{padding:8px 10px;color:#111827;white-space:nowrap}
+    </style>
+    <table id="ctable">
+    <thead><tr>
+      <th>Campaign</th><th>Cost</th><th>Leads</th><th>Cost/Lead</th>
+      <th>APT</th><th>APT/Lead</th><th>Customers</th><th>Order/APT</th><th>Sales</th>
+    </tr></thead>
+    <tbody>
+    """
+
+    rows_data = []
+    for _, row in disp.iterrows():
+        is_total = row["Campaign"] == "Total"
+        row_class = "total-row" if is_total else "camp-row"
+        camp_val = "" if is_total else row["Campaign"]
+        tbl_html += f'<tr class="{row_class}" onclick="selectCamp(this, \'{camp_val.replace("'","\'")}\')">'
+        for col in ["Campaign","Cost","Leads","Cost/Lead","APT","APT/Lead","Customers","Order/APT","Sales"]:
+            tbl_html += f'<td>{row[col]}</td>'
+        tbl_html += "</tr>"
+
+    tbl_html += """
+    </tbody></table>
+    <script>
+    var selected = null;
+    function selectCamp(tr, name) {
+        if (tr.classList.contains("total-row")) return;
+        if (selected === tr) {
+            tr.classList.remove("selected");
+            selected = null;
+            window.parent.postMessage({type:"streamlit:setComponentValue", value:""}, "*");
+        } else {
+            if (selected) selected.classList.remove("selected");
+            tr.classList.add("selected");
+            selected = tr;
+            window.parent.postMessage({type:"streamlit:setComponentValue", value:name}, "*");
+        }
+    }
+    </script>
+    """
+
+    clicked = components.html(
+        tbl_html,
+        height=min(600, (len(disp)+1)*35+60),
+        scrolling=True
     )
 
+    # Use session state to persist selected campaign
+    if clicked is not None:
+        st.session_state["trend_selected_camp"] = clicked
+
+    sel_camp_name = st.session_state.get("trend_selected_camp", "")
+
     # Determine which campaign to chart
-    if sel_camp_name != "All Campaigns":
+    if sel_camp_name and sel_camp_name != "":
         chart_df = full_df[full_df["Campaign Objective"] == sel_camp_name].copy()
         chart_title = sel_camp_name
     else:
