@@ -250,6 +250,23 @@ with st.sidebar:
     sel_camp = "All"
     sel_off  = "All"
     date_range = None
+
+    # Campaign selector — only show in Trends tab
+    if st.session_state.get("page","overview") == "trends" and "Campaign Performance" in data:
+        st.markdown("<p style='color:#888888;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin:8px 0 4px'>Campaign</p>", unsafe_allow_html=True)
+        camp_names_sb = ["All Campaigns"] + sorted(
+            data["Campaign Performance"]["Campaign Objective"].dropna().unique().tolist()
+        )
+        if "trend_selected_camp" not in st.session_state:
+            st.session_state["trend_selected_camp"] = "All Campaigns"
+        sel_trend_sb = st.selectbox(
+            "Camp", camp_names_sb,
+            index=camp_names_sb.index(st.session_state["trend_selected_camp"])
+                  if st.session_state["trend_selected_camp"] in camp_names_sb else 0,
+            label_visibility="collapsed",
+            key="trend_camp_sidebar"
+        )
+        st.session_state["trend_selected_camp"] = sel_trend_sb
     MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
     all_years = []
     if "Campaign Performance" in data:
@@ -721,20 +738,8 @@ elif st.session_state.page == "trends":
         scrolling=True
     )
 
-    # Selectbox hidden below — synced with click via query params workaround
-    # Use a simple selectbox for now as fallback
-    camp_names = ["All Campaigns"] + camp_agg["Campaign Objective"].tolist()
-    if "trend_selected_camp" not in st.session_state:
-        st.session_state["trend_selected_camp"] = "All Campaigns"
-
-    sel_camp_name = st.selectbox(
-        "Campaign trend:",
-        camp_names,
-        key="trend_camp_select",
-        index=camp_names.index(st.session_state["trend_selected_camp"])
-              if st.session_state["trend_selected_camp"] in camp_names else 0
-    )
-    st.session_state["trend_selected_camp"] = sel_camp_name
+    # Get selected campaign from sidebar
+    sel_camp_name = st.session_state.get("trend_selected_camp", "All Campaigns")
 
     # Determine which campaign to chart
     if sel_camp_name and sel_camp_name != "All Campaigns":
