@@ -757,6 +757,7 @@ elif st.session_state.page == "trends":
     if "trend_metric" not in st.session_state:
         st.session_state.trend_metric = "CRM Leads"
 
+    st.markdown("<div style='margin-top:32px'></div>", unsafe_allow_html=True)
     # Metric buttons using columns
     cols = st.columns(len(metric_opts))
     for i, (m, lbl) in enumerate(zip(metric_opts, metric_labels)):
