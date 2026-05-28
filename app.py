@@ -319,6 +319,8 @@ if st.session_state.page == "overview":
         import calendar
         from datetime import date as _date
         _today = _date.today()
+        # Only show pace bar if selected range includes current month
+        _is_current_month = (to_year == _today.year and to_m == _today.month)
         _days_in_month = calendar.monthrange(_today.year, _today.month)[1]
         _days_elapsed = max(_today.day - 1, 1)
         _pct = round(_days_elapsed / _days_in_month * 100)
@@ -331,17 +333,21 @@ if st.session_state.page == "overview":
                         '<div style="font-size:1.3rem;font-weight:500;color:#111827;margin-bottom:8px">—</div></div>')
             raw = ov_sum[m]
             v = fc(raw) if cur else fn(raw)
-            paced = raw / _days_elapsed * _days_in_month
-            pv = fc(paced) if cur else fn(paced)
+            if _is_current_month:
+                paced = raw / _days_elapsed * _days_in_month
+                pv = fc(paced) if cur else fn(paced)
+                pace_html = (f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
+                             f'<span style="font-size:0.72rem;font-weight:600;color:#374151">{pv}</span>' +
+                             f'<span style="font-size:0.62rem;color:#9ca3af">{_pct}%</span></div>' +
+                             f'<div style="height:4px;background:#f3f4f6;border-radius:3px;overflow:hidden">' +
+                             f'<div style="height:100%;width:{_pct}%;background:{color};border-radius:3px"></div></div>')
+            else:
+                pace_html = ""
             return (f'<div style="background:white;border:1px solid #e5e7eb;border-radius:10px;padding:14px 14px 12px;position:relative;overflow:hidden">' +
                     f'<div style="position:absolute;top:0;left:0;right:0;height:4px;border-radius:10px 10px 0 0;background:{color}"></div>' +
                     f'<div style="font-size:0.58rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">{m}</div>' +
                     f'<div style="font-size:1.3rem;font-weight:500;color:#111827;margin-bottom:8px">{v}</div>' +
-                    f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
-                    f'<span style="font-size:0.72rem;font-weight:600;color:#374151">{pv}</span>' +
-                    f'<span style="font-size:0.62rem;color:#9ca3af">{_pct}%</span></div>' +
-                    f'<div style="height:4px;background:#f3f4f6;border-radius:3px;overflow:hidden">' +
-                    f'<div style="height:100%;width:{_pct}%;background:{color};border-radius:3px"></div></div></div>')
+                    pace_html + '</div>')
 
         st.markdown(
             '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:26px">'+
@@ -375,21 +381,21 @@ if st.session_state.page == "overview":
             st.markdown(sh("💸 Spend by Campaign")+sb_o(),unsafe_allow_html=True)
             fig=px.pie(camp_df,values="Spend ($)",names="Campaign Objective",hole=0.42,color_discrete_sequence=COLORS)
             fig.update_traces(textposition="inside",textinfo="percent",hovertemplate="<b>%{label}</b><br>$%{value:,.0f}<extra></extra>")
-            fig.update_layout(height=220,margin=dict(t=0,b=0,l=0,r=0),paper_bgcolor="white",legend=dict(font=dict(size=9)))
+            fig.update_layout(height=280,margin=dict(t=0,b=0,l=0,r=0),paper_bgcolor="white",legend=dict(font=dict(size=9)))
             st.plotly_chart(fig,use_container_width=True); st.markdown(sb_c(),unsafe_allow_html=True)
         with c2:
             st.markdown(sh("👥 CRM Leads by Campaign")+sb_o(),unsafe_allow_html=True)
             ld=camp_df[camp_df["CRM Leads"]>0].sort_values("CRM Leads")
             f2=px.bar(ld,x="CRM Leads",y="Campaign Objective",orientation="h",color="Campaign Objective",color_discrete_sequence=COLORS,text="CRM Leads")
             f2.update_traces(texttemplate="%{text:,.0f}",textposition="outside")
-            f2.update_layout(height=220,margin=dict(t=0,b=0,l=0,r=45),showlegend=False,paper_bgcolor="white",plot_bgcolor="white",xaxis=dict(showgrid=False,visible=False),yaxis=dict(showgrid=False))
+            f2.update_layout(height=280,margin=dict(t=0,b=0,l=0,r=45),showlegend=False,paper_bgcolor="white",plot_bgcolor="white",xaxis=dict(showgrid=False,visible=False),yaxis=dict(showgrid=False))
             st.plotly_chart(f2,use_container_width=True); st.markdown(sb_c(),unsafe_allow_html=True)
         with c3:
             st.markdown(sh("💰 Sales by Campaign")+sb_o(),unsafe_allow_html=True)
             sd=camp_df[camp_df["Sales Amount ($)"]>0].sort_values("Sales Amount ($)")
             f3=px.bar(sd,x="Sales Amount ($)",y="Campaign Objective",orientation="h",color="Campaign Objective",color_discrete_sequence=COLORS,text="Sales Amount ($)")
             f3.update_traces(texttemplate="$%{text:,.0f}",textposition="outside")
-            f3.update_layout(height=220,margin=dict(t=0,b=0,l=0,r=65),showlegend=False,paper_bgcolor="white",plot_bgcolor="white",xaxis=dict(showgrid=False,visible=False),yaxis=dict(showgrid=False))
+            f3.update_layout(height=280,margin=dict(t=0,b=0,l=0,r=65),showlegend=False,paper_bgcolor="white",plot_bgcolor="white",xaxis=dict(showgrid=False,visible=False),yaxis=dict(showgrid=False))
             st.plotly_chart(f3,use_container_width=True); st.markdown(sb_c(),unsafe_allow_html=True)
         st.markdown(sh(f"📋 Campaign Breakdown — {sel}")+sb_o(),unsafe_allow_html=True)
         show=["Campaign Objective","Spend ($)","CRM Leads","Appointments","Customers","Sales Amount ($)","ROI","APT/Lead"]
@@ -406,7 +412,7 @@ if st.session_state.page == "overview":
             tb["Appointments"]=tb["Appointments"].apply(fn)
         if "Sales Amount ($)" in tb.columns:
             tb["Sales Amount ($)"]=tb["Sales Amount ($)"].apply(lambda x:fc(x) if x>0 else "—")
-        st.dataframe(tb,use_container_width=True,hide_index=True,height=180); st.markdown(sb_c(),unsafe_allow_html=True)
+        st.dataframe(tb,use_container_width=True,hide_index=True,height=min(600,(len(tb)+1)*35+50)); st.markdown(sb_c(),unsafe_allow_html=True)
 
 # ── PAGE 2 ─────────────────────────────────────────────────────────────────────
 elif st.session_state.page == "territory":
