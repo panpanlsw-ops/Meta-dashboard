@@ -743,12 +743,12 @@ elif st.session_state.page == "trends":
     # Get selected campaign from sidebar
     sel_camp_name = st.session_state.get("trend_selected_camp", "All Campaigns")
 
-    # Determine which campaign to chart
+    # Determine which campaign to chart — use date-filtered camp_df
     if sel_camp_name and sel_camp_name != "All Campaigns":
-        chart_df = full_df[full_df["Campaign Objective"].astype(str) == str(sel_camp_name)].copy()
+        chart_df = camp_df[camp_df["Campaign Objective"].astype(str) == str(sel_camp_name)].copy()
         chart_title = sel_camp_name
     else:
-        chart_df = full_df.copy()
+        chart_df = camp_df.copy()
         chart_title = "All Campaigns"
 
     # Metric toggle buttons
