@@ -749,20 +749,42 @@ elif st.session_state.page == "trends":
         chart_df = full_df.copy()
         chart_title = "All Campaigns"
 
-    # Metric selector
+    # Metric toggle buttons
     metric_opts   = ["Spend ($)","CRM Leads","Appointments","Customers","Sales Amount ($)"]
     metric_labels = ["Spend","Leads","APT","Customers","Sales"]
     if "trend_metric" not in st.session_state:
         st.session_state.trend_metric = "CRM Leads"
 
-    st.markdown("<style>.stSelectbox>div>div{background:white!important;color:#111827!important}</style>", unsafe_allow_html=True)
-    mc, _ = st.columns([2,5])
-    sel_metric_lbl = mc.selectbox("Metric", metric_labels,
-        index=metric_labels.index(metric_labels[metric_opts.index(st.session_state.trend_metric)]
-            if st.session_state.trend_metric in metric_opts else 1),
-        label_visibility="collapsed", key="trend_metric_sel")
-    metric = metric_opts[metric_labels.index(sel_metric_lbl)]
-    st.session_state.trend_metric = metric
+    # Render pill buttons
+    btn_html = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 14px">'
+    for m, lbl in zip(metric_opts, metric_labels):
+        active = st.session_state.trend_metric == m
+        if active:
+            btn_html += f'<span style="background:#111827;color:white;border:1px solid #111827;font-size:0.82rem;padding:5px 16px;border-radius:6px;font-weight:500">{lbl}</span>'
+        else:
+            btn_html += f'<span style="background:white;color:#374151;border:1px solid #d1d5db;font-size:0.82rem;padding:5px 16px;border-radius:6px">{lbl}</span>'
+    btn_html += '</div>'
+    st.markdown(btn_html, unsafe_allow_html=True)
+
+    # Hidden buttons to capture clicks
+    cols = st.columns(len(metric_opts))
+    for i, (m, lbl) in enumerate(zip(metric_opts, metric_labels)):
+        if cols[i].button(lbl, key=f"tmbtn_{i}", use_container_width=True):
+            st.session_state.trend_metric = m
+            st.rerun()
+    metric = st.session_state.trend_metric
+
+    # Hide native buttons with CSS
+    st.markdown("""<style>
+    div[data-testid="stHorizontalBlock"] button {
+        opacity: 0 !important;
+        height: 10px !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+    }
+    </style>""", unsafe_allow_html=True)
 
     # Aggregate monthly
     if "Year" in chart_df.columns and "Month" in chart_df.columns and len(chart_df) > 0:
