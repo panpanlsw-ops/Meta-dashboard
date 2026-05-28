@@ -662,22 +662,19 @@ elif st.session_state.page == "trends":
         "Order/APT":total_row["Order/APT"],"Sales":total_row["Sales Amount ($)"]}])
     disp = pd.concat([total_disp, disp], ignore_index=True)
 
-    st.markdown("<p style='font-size:0.78rem;color:#6b7280;margin-bottom:6px'>Click a campaign row to see its monthly trend.</p>", unsafe_allow_html=True)
     st.dataframe(disp, use_container_width=True, hide_index=True,
-                 height=min(600, (len(disp)+1)*35+40),
-                 on_select="rerun", selection_mode="single-row",
-                 key="trends_table")
+                 height=min(600, (len(disp)+1)*35+40))
 
-    # Get selected campaign
-    sel_idx = None
-    if "trends_table" in st.session_state and st.session_state.trends_table:
-        rows = st.session_state.trends_table.get("selection",{}).get("rows",[])
-        if rows:
-            sel_idx = rows[0]
+    # Campaign selector below table
+    camp_names = ["All Campaigns"] + camp_agg["Campaign Objective"].tolist()
+    sel_camp_name = st.selectbox(
+        "Select campaign to view trend:",
+        camp_names,
+        key="trend_camp_select"
+    )
 
     # Determine which campaign to chart
-    if sel_idx is not None and sel_idx > 0:  # 0 = Total row
-        sel_camp_name = disp.iloc[sel_idx]["Campaign"]
+    if sel_camp_name != "All Campaigns":
         chart_df = full_df[full_df["Campaign Objective"] == sel_camp_name].copy()
         chart_title = sel_camp_name
     else:
