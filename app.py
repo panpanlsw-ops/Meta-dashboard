@@ -646,6 +646,7 @@ elif st.session_state.page == "trends":
     camp_agg["Cost/Lead"]  = camp_agg.apply(lambda r: fc(r["Spend ($)"]/r["CRM Leads"]) if r["CRM Leads"]>0 else "—", axis=1)
     camp_agg["APT/Lead"]   = camp_agg.apply(lambda r: f'{r["Appointments"]/r["CRM Leads"]*100:.1f}%' if r["CRM Leads"]>0 and r["Appointments"]>0 else "—", axis=1)
     camp_agg["Order/APT"]  = camp_agg.apply(lambda r: f'{r["Customers"]/r["Appointments"]*100:.1f}%' if r["Appointments"]>0 else "—", axis=1)
+    camp_agg["ROI"]        = camp_agg.apply(lambda r: f'{(r["Sales Amount ($)"]-r["Spend ($)"])/r["Spend ($)"]*100:.1f}%' if r["Spend ($)"]>0 else "—", axis=1)
 
     # Total row
     tot = camp_df.sum(numeric_only=True)
@@ -659,6 +660,7 @@ elif st.session_state.page == "trends":
         "Customers": fn(tot["Customers"]),
         "Order/APT": f'{tot["Customers"]/tot["Appointments"]*100:.1f}%' if tot["Appointments"]>0 else "—",
         "Sales Amount ($)": fc(tot["Sales Amount ($)"]),
+        "ROI": f'{(tot["Sales Amount ($)"]-tot["Spend ($)"])/tot["Spend ($)"]*100:.1f}%' if tot["Spend ($)"]>0 else "—",
     }
 
     # Format display table
@@ -670,13 +672,13 @@ elif st.session_state.page == "trends":
     disp["Sales Amount ($)"] = disp["Sales Amount ($)"].apply(fc)
     col_rename = {"Campaign Objective":"Campaign","Spend ($)":"Cost","CRM Leads":"Leads","Appointments":"APT","Sales Amount ($)":"Sales"}
     disp = disp.rename(columns=col_rename)
-    disp = disp[["Campaign","Cost","Leads","Cost/Lead","APT","APT/Lead","Customers","Order/APT","Sales"]]
+    disp = disp[["Campaign","Cost","Leads","Cost/Lead","APT","APT/Lead","Customers","Order/APT","Sales","ROI"]]
 
     total_disp = pd.DataFrame([{
         "Campaign":"Total","Cost":total_row["Spend ($)"],"Leads":total_row["CRM Leads"],
         "Cost/Lead":total_row["Cost/Lead"],"APT":total_row["Appointments"],
         "APT/Lead":total_row["APT/Lead"],"Customers":total_row["Customers"],
-        "Order/APT":total_row["Order/APT"],"Sales":total_row["Sales Amount ($)"]}])
+        "Order/APT":total_row["Order/APT"],"Sales":total_row["Sales Amount ($)"],"ROI":total_row["ROI"]}])
     disp = pd.concat([total_disp, disp], ignore_index=True)
 
     # ── Clickable HTML table ─────────────────────────────────────
@@ -773,6 +775,7 @@ elif st.session_state.page == "trends":
             st.session_state.trend_metric = m
             st.rerun()
     metric = st.session_state.trend_metric
+    sel_metric_lbl = metric_labels[metric_opts.index(metric)] if metric in metric_opts else metric
 
     # Hide native buttons with CSS
     st.markdown("""<style>
