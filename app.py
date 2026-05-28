@@ -715,21 +715,30 @@ elif st.session_state.page == "trends":
     </script>
     """
 
-    clicked = components.html(
+    components.html(
         tbl_html,
         height=min(600, (len(disp)+1)*35+60),
         scrolling=True
     )
 
-    # Use session state to persist selected campaign
-    if clicked is not None:
-        st.session_state["trend_selected_camp"] = clicked
+    # Selectbox hidden below — synced with click via query params workaround
+    # Use a simple selectbox for now as fallback
+    camp_names = ["All Campaigns"] + camp_agg["Campaign Objective"].tolist()
+    if "trend_selected_camp" not in st.session_state:
+        st.session_state["trend_selected_camp"] = "All Campaigns"
 
-    sel_camp_name = st.session_state.get("trend_selected_camp", "")
+    sel_camp_name = st.selectbox(
+        "Campaign trend:",
+        camp_names,
+        key="trend_camp_select",
+        index=camp_names.index(st.session_state["trend_selected_camp"])
+              if st.session_state["trend_selected_camp"] in camp_names else 0
+    )
+    st.session_state["trend_selected_camp"] = sel_camp_name
 
     # Determine which campaign to chart
-    if sel_camp_name and sel_camp_name != "":
-        chart_df = full_df[full_df["Campaign Objective"] == sel_camp_name].copy()
+    if sel_camp_name and sel_camp_name != "All Campaigns":
+        chart_df = full_df[full_df["Campaign Objective"].astype(str) == str(sel_camp_name)].copy()
         chart_title = sel_camp_name
     else:
         chart_df = full_df.copy()
