@@ -342,11 +342,22 @@ if st.session_state.page == "overview":
             if _is_current_month:
                 paced = raw / _days_elapsed * _days_in_month
                 pv = fc(paced) if cur else fn(paced)
+                # Actual vs expected: expected = paced * days_elapsed/days_in_month = raw
+                # So compare raw vs paced proportionally
+                expected_now = paced * _days_elapsed / _days_in_month
+                if expected_now > 0:
+                    diff_pct = (raw - expected_now) / expected_now * 100
+                    diff_str = f"+{diff_pct:.1f}%" if diff_pct >= 0 else f"{diff_pct:.1f}%"
+                    diff_color = "#16a34a" if diff_pct >= 0 else "#dc2626"
+                else:
+                    diff_str = "—"
+                    diff_color = "#9ca3af"
+                bar_w = min(100, round(_pct))
                 pace_html = (f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
-                             f'<span style="font-size:0.72rem;font-weight:600;color:#374151">{pv}</span>' +
-                             f'<span style="font-size:0.62rem;color:#9ca3af">{_pct}%</span></div>' +
+                             f'<span style="font-size:0.72rem;font-weight:600;color:#374151">{pv} pace</span>' +
+                             f'<span style="font-size:0.68rem;font-weight:600;color:{diff_color}">{diff_str}</span></div>' +
                              f'<div style="height:4px;background:#f3f4f6;border-radius:3px;overflow:hidden">' +
-                             f'<div style="height:100%;width:{_pct}%;background:{color};border-radius:3px"></div></div>')
+                             f'<div style="height:100%;width:{bar_w}%;background:{color};border-radius:3px"></div></div>')
             else:
                 pace_html = ""
             return (f'<div style="background:white;border:1px solid #e5e7eb;border-radius:10px;padding:14px 14px 12px;position:relative;overflow:hidden">' +
