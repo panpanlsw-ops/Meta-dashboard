@@ -757,45 +757,29 @@ elif st.session_state.page == "trends":
     if "trend_metric" not in st.session_state:
         st.session_state.trend_metric = "CRM Leads"
 
-    # Render pill buttons
-    btn_html = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 14px">'
-    for m, lbl in zip(metric_opts, metric_labels):
-        active = st.session_state.trend_metric == m
-        if active:
-            btn_html += f'<span style="background:#111827;color:white;border:1px solid #111827;font-size:0.82rem;padding:5px 16px;border-radius:6px;font-weight:500">{lbl}</span>'
-        else:
-            btn_html += f'<span style="background:white;color:#374151;border:1px solid #d1d5db;font-size:0.82rem;padding:5px 16px;border-radius:6px">{lbl}</span>'
-    btn_html += '</div>'
-    st.markdown(btn_html, unsafe_allow_html=True)
-
-    # Hidden buttons to capture clicks
+    # Metric buttons using columns
     cols = st.columns(len(metric_opts))
     for i, (m, lbl) in enumerate(zip(metric_opts, metric_labels)):
-        if cols[i].button(lbl, key=f"tmbtn_{i}", use_container_width=True):
+        if cols[i].button(
+            lbl, key=f"tmbtn_{i}",
+            use_container_width=True,
+            type="primary" if st.session_state.trend_metric == m else "secondary"
+        ):
             st.session_state.trend_metric = m
             st.rerun()
     metric = st.session_state.trend_metric
     sel_metric_lbl = metric_labels[metric_opts.index(metric)] if metric in metric_opts else metric
 
-    # Hide native buttons with CSS
-    st.markdown("""<style>
-    div[data-testid="stHorizontalBlock"] button {
-        opacity: 0 !important;
-        height: 10px !important;
-        min-height: 0 !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        border: none !important;
-    }
-    </style>""", unsafe_allow_html=True)
-
     # Aggregate monthly
     if "Year" in chart_df.columns and "Month" in chart_df.columns and len(chart_df) > 0:
+        chart_df["Year"]  = pd.to_numeric(chart_df["Year"],  errors="coerce").fillna(0).astype(int)
+        chart_df["Month"] = pd.to_numeric(chart_df["Month"], errors="coerce").fillna(0).astype(int)
+        chart_df = chart_df[(chart_df["Year"] > 0) & (chart_df["Month"] > 0)]
         agg_c = {c:"sum" for c in metric_opts if c in chart_df.columns}
         agg = chart_df.groupby(["Year","Month"]).agg(agg_c).reset_index()
         agg["Period"] = pd.to_datetime(
             agg.apply(lambda r: f"{int(r['Year'])}-{int(r['Month']):02d}-01", axis=1))
-        agg = agg.sort_values("Period")
+        agg = agg.sort_values("Period").drop_duplicates(subset=["Period"])
 
         fig = go.Figure()
         fig.add_trace(go.Scatter(
