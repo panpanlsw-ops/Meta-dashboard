@@ -301,7 +301,7 @@ st.markdown(
     f'<span style="color:white;font-weight:700;font-size:1rem">Meta Ads</span>' +
     f'<span style="width:1px;height:22px;background:rgba(255,255,255,0.35);display:inline-block"></span>' +
     f'<span style="color:white;font-size:0.9rem;font-weight:600">{titles[st.session_state.page]}</span>' +
-    f'<span style="margin-left:auto;color:rgba(255,255,255,0.85);font-size:0.8rem">Dec 2024</span>' +
+    f'<span style="margin-left:auto;color:rgba(255,255,255,0.85);font-size:0.8rem">{from_month} {from_year} – {to_month} {to_year}</span>' +
     f'</div>', unsafe_allow_html=True)
 
 # ── PAGE 1 ─────────────────────────────────────────────────────────────────────
@@ -322,7 +322,11 @@ if st.session_state.page == "overview":
         from datetime import date as _date
         _today = _date.today()
         # Only show pace bar if selected range includes current month
-        _is_current_month = (to_year == _today.year and to_m == _today.month)
+        # Only show pace when BOTH from and to are current month
+        _is_current_month = (
+            to_year == _today.year and to_m == _today.month and
+            from_year == _today.year and from_m == _today.month
+        )
         _days_in_month = calendar.monthrange(_today.year, _today.month)[1]
         _days_elapsed = max(_today.day - 1, 1)
         _pct = round(_days_elapsed / _days_in_month * 100)
