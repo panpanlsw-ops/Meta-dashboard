@@ -699,7 +699,7 @@ elif st.session_state.page == "trends":
     <table id="ctable">
     <thead><tr>
       <th>Campaign</th><th>Cost</th><th>Leads</th><th>Cost/Lead</th>
-      <th>APT</th><th>APT/Lead</th><th>Customers</th><th>Order/APT</th><th>Sales</th>
+      <th>APT</th><th>APT/Lead</th><th>Customers</th><th>Order/APT</th><th>Sales</th><th>ROI</th>
     </tr></thead>
     <tbody>
     """
@@ -710,8 +710,8 @@ elif st.session_state.page == "trends":
         row_class = "total-row" if is_total else "camp-row"
         camp_val = "" if is_total else row["Campaign"]
         tbl_html += f'<tr class="{row_class}" onclick="selectCamp(this, \'{camp_val.replace("'","\'")}\')">'
-        for col in ["Campaign","Cost","Leads","Cost/Lead","APT","APT/Lead","Customers","Order/APT","Sales"]:
-            tbl_html += f'<td>{row[col]}</td>'
+        for col in ["Campaign","Cost","Leads","Cost/Lead","APT","APT/Lead","Customers","Order/APT","Sales","ROI"]:
+            tbl_html += f'<td>{row.get(col,"—")}</td>'
         tbl_html += "</tr>"
 
     tbl_html += """
@@ -796,7 +796,7 @@ elif st.session_state.page == "trends":
             title=dict(text=f"{chart_title} — {sel_metric_lbl}", font=dict(size=13,color="#111827"), x=0),
             margin=dict(t=40,b=40,l=55,r=20),
             paper_bgcolor="white", plot_bgcolor="white",
-            xaxis=dict(showgrid=False, tickformat="%b %Y"),
+            xaxis=dict(showgrid=False, tickformat="%b %Y", dtick="M1"),
             yaxis=dict(showgrid=True, gridcolor="#f3f4f6"),
             hovermode="x unified", showlegend=False
         )
