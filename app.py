@@ -254,9 +254,12 @@ with st.sidebar:
     # Campaign selector — only show in Trends tab
     if st.session_state.get("page","overview") == "trends" and "Campaign Performance" in data:
         st.markdown("<p style='color:#888888;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin:8px 0 4px'>Campaign</p>", unsafe_allow_html=True)
-        camp_names_sb = ["All Campaigns"] + sorted(
-            data["Campaign Performance"]["Campaign Objective"].dropna().unique().tolist()
-        )
+        try:
+            camp_names_sb = ["All Campaigns"] + sorted([
+                str(x) for x in data["Campaign Performance"]["Campaign Objective"].dropna().unique().tolist()
+            ])
+        except Exception:
+            camp_names_sb = ["All Campaigns"]
         if "trend_selected_camp" not in st.session_state:
             st.session_state["trend_selected_camp"] = "All Campaigns"
         sel_trend_sb = st.selectbox(
