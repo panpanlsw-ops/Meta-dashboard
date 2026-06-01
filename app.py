@@ -719,8 +719,8 @@ elif st.session_state.page == "trends":
     for _, row in disp.iterrows():
         is_total = row["Campaign"] == "Total"
         row_class = "total-row" if is_total else "camp-row"
-        camp_val = "" if is_total else row["Campaign"]
-        tbl_html += f'<tr class="{row_class}" onclick="selectCamp(this, \'{camp_val.replace("'","\'")}\')">'
+        camp_val = "" if is_total else str(row["Campaign"]).replace("'", "\'")
+        tbl_html += f'<tr class="{row_class}" onclick="selectCamp(this, \'{camp_val}\')">'
         for col in ["Campaign","Cost","Leads","Cost/Lead","APT","APT/Lead","Customers","Order/APT","Sales","ROI"]:
             tbl_html += f'<td>{row.get(col,"—")}</td>'
         tbl_html += "</tr>"
