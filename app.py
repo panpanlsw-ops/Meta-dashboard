@@ -93,7 +93,7 @@ def sb_o():
     return '<div style="background:white;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;padding:14px;margin-bottom:24px">'
 def sb_c(): return "</div>"
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=1800)
 def load_data():
     import gspread
     from google.oauth2.service_account import Credentials
@@ -293,6 +293,10 @@ with st.sidebar:
     to_year   = int(to_year)
 
     st.markdown("---")
+    if st.button("🔄 Refresh Data", use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
+    st.markdown("---")
     st.markdown("**VIEWS**")
 
     for key,icon,label in [("overview","📊","MTD Overview"),
@@ -329,6 +333,13 @@ if st.session_state.page == "overview":
 
     if "Overview" in data:
         ov_all = data["Overview"].copy()
+        # Ensure Year and Month are integers
+        ov_all["Year"]  = pd.to_numeric(ov_all["Year"],  errors="coerce").fillna(0).astype(int)
+        ov_all["Month"] = pd.to_numeric(ov_all["Month"], errors="coerce").fillna(0).astype(int)
+        # Ensure numeric columns are numeric
+        for col in ["CRM Leads","Appointments","Customers","Sales Amount ($)","Spend ($)"]:
+            if col in ov_all.columns:
+                ov_all[col] = pd.to_numeric(ov_all[col], errors="coerce").fillna(0)
         # Filter by selected date range
         ov = ov_all[
             ((ov_all["Year"] > from_year) |
@@ -352,7 +363,7 @@ if st.session_state.page == "overview":
         _pct = round(_days_elapsed / _days_in_month * 100)
 
         def kp(m, color, cur=False):
-            if m not in ov_sum.index or ov_sum[m] == 0:
+            if m not in ov_sum.index:
                 return (f'<div style="background:white;border:1px solid #e5e7eb;border-radius:10px;padding:14px 14px 12px;position:relative;overflow:hidden">' +
                         f'<div style="position:absolute;top:0;left:0;right:0;height:4px;border-radius:10px 10px 0 0;background:{color}"></div>' +
                         f'<div style="font-size:0.58rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">{m}</div>' +
