@@ -255,8 +255,12 @@ with st.sidebar:
     if st.session_state.get("page","overview") == "trends" and "Campaign Performance" in data:
         st.markdown("<p style='color:#888888;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin:8px 0 4px'>Campaign</p>", unsafe_allow_html=True)
         try:
+            cp = data["Campaign Performance"]
+            # Try Campaign Objective first, then Campaign
+            camp_col = "Campaign Objective" if "Campaign Objective" in cp.columns else "Campaign"
             camp_names_sb = ["All Campaigns"] + sorted([
-                str(x) for x in data["Campaign Performance"]["Campaign Objective"].dropna().unique().tolist()
+                str(x) for x in cp[camp_col].dropna().unique().tolist()
+                if str(x) not in ["", "nan", "0"]
             ])
         except Exception:
             camp_names_sb = ["All Campaigns"]
@@ -767,7 +771,8 @@ elif st.session_state.page == "trends":
 
     # Determine which campaign to chart — use date-filtered camp_df
     if sel_camp_name and sel_camp_name != "All Campaigns":
-        chart_df = camp_df[camp_df["Campaign Objective"].astype(str) == str(sel_camp_name)].copy()
+        camp_col = "Campaign Objective" if "Campaign Objective" in camp_df.columns else "Campaign"
+        chart_df = camp_df[camp_df[camp_col].astype(str) == str(sel_camp_name)].copy()
         chart_title = sel_camp_name
     else:
         chart_df = camp_df.copy()
