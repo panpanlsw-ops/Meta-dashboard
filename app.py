@@ -769,11 +769,14 @@ elif st.session_state.page == "trends":
     # Get selected campaign from sidebar
     sel_camp_name = st.session_state.get("trend_selected_camp", "All Campaigns")
 
-    # Determine which campaign to chart — use date-filtered camp_df
+    # Use raw date-filtered data (before groupby) for chart
+    camp_col = "Campaign Objective" if "Campaign Objective" in camp_df.columns else "Campaign"
+
     if sel_camp_name and sel_camp_name != "All Campaigns":
-        camp_col = "Campaign Objective" if "Campaign Objective" in camp_df.columns else "Campaign"
         chart_df = camp_df[camp_df[camp_col].astype(str) == str(sel_camp_name)].copy()
         chart_title = sel_camp_name
+        # Debug
+        st.caption(f"Showing: {sel_camp_name} — {len(chart_df)} rows found")
     else:
         chart_df = camp_df.copy()
         chart_title = "All Campaigns"
