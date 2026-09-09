@@ -572,8 +572,8 @@ elif st.session_state.page == "territory":
                  f'<td>{int(r["Unique Leads"])}</td><td>{int(r["New Leads"])}</td>' +
                  f'<td>{int(r["Appointments"])}</td><td>{int(r["Quote"])}</td>' +
                  f'<td>{int(r["Customers"])}</td><td>{fc(r["Sales Amount ($)"])}</td>' +
-                 f'<td>{bar(min(100,float(str(r.get("Leads %",0)).replace("%","").replace(",","").strip() or 0)), "#1877F2")}</td>' +
-                 f'<td>{bar(min(100,float(str(r.get("Sales %",0)).replace("%","").replace(",","").strip() or 0)), "#22c55e")}</td>' +
+                 f'<td>{bar(min(100, float(r.get("Leads %", 0))), "#1877F2")}</td>' +
+                 f'<td>{bar(min(100, float(r.get("Sales %", 0))), "#22c55e")}</td>' +
                  f'<td>{str(r.get("APT/Leads","0%"))}</td>' +
                  f'<td>{str(r.get("Order/Leads","0%"))}</td></tr>')
 
