@@ -530,7 +530,7 @@ elif st.session_state.page == "territory":
         return (f'<div style="display:flex;align-items:center;gap:6px">' +
                 f'<div style="flex:1;height:4px;background:#e5e7eb;border-radius:3px;min-width:50px">' +
                 f'<div style="width:{w}%;height:100%;background:{color};border-radius:3px"></div></div>' +
-                f'<span style="font-size:11px;color:#374151;white-space:nowrap">{pct:.2f}</span></div>')
+                f'<span style="font-size:11px;color:#374151;white-space:nowrap">{pct:.2f}%</span></div>')
 
     html = """
     <style>
