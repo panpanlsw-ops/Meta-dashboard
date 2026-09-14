@@ -277,12 +277,10 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ── Refresh button ────────────────────────────────────────
-rcol, _ = st.columns([1, 6])
-with rcol:
-    if st.button("🔄 Refresh Data", use_container_width=True):
-        st.cache_data.clear()
-        st.rerun()
+# ── Hidden refresh (cache auto-refreshes every 30 min) ────
+if st.sidebar.button("🔄 Refresh Data"):
+    st.cache_data.clear()
+    st.rerun()
 
 # ── Tab navigation ────────────────────────────────────────
 tabs_def = [("overview","📊 MTD Overview"),("territory","🗺️ By Territory"),("trends","📈 Trends")]
@@ -624,197 +622,212 @@ with t2:
     components.html(html, height=tbl_height, scrolling=True)
 
 with t3:
+    import json
 
     if "Campaign Performance" not in data:
-        st.warning("No Campaign Performance sheet found."); st.stop()
+        st.warning("No Campaign Performance data found."); st.stop()
 
-    # Full dataset for chart (all months)
+    # ── Date filters ──────────────────────────────────────────────
+    st.markdown("<style>.stSelectbox>div>div{background:white!important;color:#111827!important}</style>", unsafe_allow_html=True)
+    MONTHS_T3 = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    all_years_t3 = sorted([int(y) for y in data["Campaign Performance"]["Year"].dropna().unique().tolist()])
+    if not all_years_t3: all_years_t3 = [2026]
+
+    tc1,tc2,tc3,tc4,tc5 = st.columns([2,2,0.3,2,2])
+    with tc1:
+        st.markdown("<p style='font-size:0.72rem;color:#6b7280;margin-bottom:3px'>From Month</p>", unsafe_allow_html=True)
+        t3_fm = st.selectbox("t3fm", MONTHS_T3, index=0, label_visibility="collapsed", key="t3_fm")
+    with tc2:
+        st.markdown("<p style='font-size:0.72rem;color:#6b7280;margin-bottom:3px'>From Year</p>", unsafe_allow_html=True)
+        t3_fy = st.selectbox("t3fy", all_years_t3, index=0, label_visibility="collapsed", key="t3_fy")
+    with tc3:
+        st.markdown("<p style='margin-top:22px;color:#6b7280;font-size:13px'>to</p>", unsafe_allow_html=True)
+    with tc4:
+        st.markdown("<p style='font-size:0.72rem;color:#6b7280;margin-bottom:3px'>To Month</p>", unsafe_allow_html=True)
+        t3_tm = st.selectbox("t3tm", MONTHS_T3, index=len(MONTHS_T3)-1, label_visibility="collapsed", key="t3_tm")
+    with tc5:
+        st.markdown("<p style='font-size:0.72rem;color:#6b7280;margin-bottom:3px'>To Year</p>", unsafe_allow_html=True)
+        t3_ty = st.selectbox("t3ty", all_years_t3, index=len(all_years_t3)-1, label_visibility="collapsed", key="t3_ty")
+
+    t3_from_m = MONTHS_T3.index(t3_fm) + 1
+    t3_to_m   = MONTHS_T3.index(t3_tm) + 1
+    t3_fy = int(t3_fy); t3_ty = int(t3_ty)
+    st.caption(f"Showing: {t3_fm} {t3_fy} – {t3_tm} {t3_ty}")
+
+    # ── Filter and aggregate data ─────────────────────────────────
     full_df = data["Campaign Performance"].copy()
     full_df["Year"]  = pd.to_numeric(full_df["Year"],  errors="coerce").fillna(0).astype(int)
     full_df["Month"] = pd.to_numeric(full_df["Month"], errors="coerce").fillna(0).astype(int)
+    camp_col = "Campaign Objective" if "Campaign Objective" in full_df.columns else "Campaign"
 
-    # Date-filtered dataset for summary table
+    # Selected date range
     camp_df = full_df[
-        ((full_df["Year"] > from_year) |
-         ((full_df["Year"] == from_year) & (full_df["Month"] >= from_m))) &
-        ((full_df["Year"] < to_year) |
-         ((full_df["Year"] == to_year) & (full_df["Month"] <= to_m)))
+        ((full_df["Year"] > t3_fy) |
+         ((full_df["Year"] == t3_fy) & (full_df["Month"] >= t3_from_m))) &
+        ((full_df["Year"] < t3_ty) |
+         ((full_df["Year"] == t3_ty) & (full_df["Month"] <= t3_to_m)))
     ].copy()
 
-    # Aggregate by campaign for table (one row per campaign)
-    agg_cols = {c:"sum" for c in ["Spend ($)","CRM Leads","Appointments","Customers","Sales Amount ($)"] if c in camp_df.columns}
-    camp_agg = camp_df.groupby("Campaign Objective").agg(agg_cols).reset_index()
-    camp_agg["Cost/Lead"]  = camp_agg.apply(lambda r: fc(r["Spend ($)"]/r["CRM Leads"]) if r["CRM Leads"]>0 else "—", axis=1)
-    camp_agg["APT/Lead"]   = camp_agg.apply(lambda r: f'{r["Appointments"]/r["CRM Leads"]*100:.1f}%' if r["CRM Leads"]>0 and r["Appointments"]>0 else "—", axis=1)
-    camp_agg["Order/APT"]  = camp_agg.apply(lambda r: f'{r["Customers"]/r["Appointments"]*100:.1f}%' if r["Appointments"]>0 else "—", axis=1)
-    camp_agg["ROI"]        = camp_agg.apply(lambda r: f'{(r["Sales Amount ($)"]-r["Spend ($)"])/r["Spend ($)"]*100:.1f}%' if r["Spend ($)"]>0 else "—", axis=1)
-
-    # Sort by CRM Leads desc, then Sales Amount desc, then ROI desc
-    camp_agg["_roi_sort"] = camp_agg.apply(
-        lambda r: (r["Sales Amount ($)"]-r["Spend ($)"])/r["Spend ($)"]*100 if r["Spend ($)"]>0 else 0, axis=1)
-    camp_agg = camp_agg.sort_values(
-        ["CRM Leads","Sales Amount ($)","_roi_sort"],
-        ascending=[False,False,False]
-    ).drop(columns=["_roi_sort"]).reset_index(drop=True)
+    # Aggregate by campaign
+    num_cols = {c:"sum" for c in ["Spend ($)","CRM Leads","Appointments","Customers","Sales Amount ($)"] if c in camp_df.columns}
+    camp_agg = camp_df.groupby(camp_col).agg(num_cols).reset_index()
+    camp_agg["ROI"]       = camp_agg.apply(lambda r: (r["Sales Amount ($)"]-r["Spend ($)"])/r["Spend ($)"]*100 if r["Spend ($)"]>0 else 0, axis=1)
+    camp_agg["APT/Lead"]  = camp_agg.apply(lambda r: r["Appointments"]/r["CRM Leads"]*100 if r["CRM Leads"]>0 else 0, axis=1)
+    camp_agg["Order/APT"] = camp_agg.apply(lambda r: r["Customers"]/r["Appointments"]*100 if r["Appointments"]>0 else 0, axis=1)
+    camp_agg["_roi_sort"] = camp_agg["ROI"]
+    camp_agg = camp_agg.sort_values(["CRM Leads","Sales Amount ($)","_roi_sort"], ascending=[False,False,False]).drop(columns=["_roi_sort"])
 
     # Total row
     tot = camp_df.sum(numeric_only=True)
-    total_row = {
-        "Campaign Objective":"Total",
-        "Spend ($)": fc(tot["Spend ($)"]),
-        "CRM Leads": fn(tot["CRM Leads"]),
-        "Cost/Lead": fc(tot["Spend ($)"]/tot["CRM Leads"]) if tot["CRM Leads"]>0 else "—",
-        "Appointments": fn(tot["Appointments"]),
-        "APT/Lead": f'{tot["Appointments"]/tot["CRM Leads"]*100:.1f}%' if tot["CRM Leads"]>0 else "—",
-        "Customers": fn(tot["Customers"]),
-        "Order/APT": f'{tot["Customers"]/tot["Appointments"]*100:.1f}%' if tot["Appointments"]>0 else "—",
-        "Sales Amount ($)": fc(tot["Sales Amount ($)"]),
-        "ROI": f'{(tot["Sales Amount ($)"]-tot["Spend ($)"])/tot["Spend ($)"]*100:.1f}%' if tot["Spend ($)"]>0 else "—",
-    }
+    tot_roi = (tot["Sales Amount ($)"]-tot["Spend ($)"])/tot["Spend ($)"]*100 if tot.get("Spend ($)",0)>0 else 0
+    tot_al  = tot["Appointments"]/tot["CRM Leads"]*100 if tot.get("CRM Leads",0)>0 else 0
+    tot_oa  = tot["Customers"]/tot["Appointments"]*100 if tot.get("Appointments",0)>0 else 0
 
-    # Format display table
-    disp = camp_agg.copy()
-    disp["Spend ($)"]        = disp["Spend ($)"].apply(fc)
-    disp["CRM Leads"]        = disp["CRM Leads"].apply(fn)
-    disp["Appointments"]     = disp["Appointments"].apply(fn)
-    disp["Customers"]        = disp["Customers"].apply(fn)
-    disp["Sales Amount ($)"] = disp["Sales Amount ($)"].apply(fc)
-    col_rename = {"Campaign Objective":"Campaign","Spend ($)":"Cost","CRM Leads":"Leads","Appointments":"APT","Sales Amount ($)":"Sales"}
-    disp = disp.rename(columns=col_rename)
-    disp = disp[["Campaign","Cost","Leads","Cost/Lead","APT","APT/Lead","Customers","Order/APT","Sales","ROI"]]
+    avg_al = camp_agg["APT/Lead"].mean()
+    avg_oa = camp_agg["Order/APT"].mean()
 
-    total_disp = pd.DataFrame([{
-        "Campaign":"Total","Cost":total_row["Spend ($)"],"Leads":total_row["CRM Leads"],
-        "Cost/Lead":total_row["Cost/Lead"],"APT":total_row["Appointments"],
-        "APT/Lead":total_row["APT/Lead"],"Customers":total_row["Customers"],
-        "Order/APT":total_row["Order/APT"],"Sales":total_row["Sales Amount ($)"],"ROI":total_row["ROI"]}])
-    disp = pd.concat([total_disp, disp], ignore_index=True)
+    def f2(n):
+        try:
+            v = float(n)
+            return "0" if v==0 else f"{v:,.1f}"
+        except: return "0"
 
-    # ── Clickable HTML table ─────────────────────────────────────
+    def badge_t3(v, avg):
+        c = "#065f46" if v>=avg else "#991b1b"
+        b = "#d1fae5" if v>=avg else "#fee2e2"
+        return f'<span style="background:{b};color:{c};padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600;">{f2(v)}%</span>'
+
+    # Build trend data for Chart.js
+    # All months in selected range
+    sel_months = []
+    y, m = t3_fy, t3_from_m
+    while (y < t3_ty) or (y == t3_ty and m <= t3_to_m):
+        sel_months.append((y, m))
+        m += 1
+        if m > 12: m = 1; y += 1
+
+    chart_labels = [f"{MONTHS_T3[mo-1]} {yr}" for yr, mo in sel_months]
+
+    # Build trend for each campaign and total
+    def get_trend(camp_name=None):
+        d = {}
+        for field, col in [("leads","CRM Leads"),("cost","Spend ($)"),("apt","Appointments"),("cust","Customers"),("sales","Sales Amount ($)")]:
+            vals = []
+            for yr, mo in sel_months:
+                if camp_name:
+                    sub = full_df[(full_df[camp_col]==camp_name) & (full_df["Year"]==yr) & (full_df["Month"]==mo)]
+                else:
+                    sub = full_df[(full_df["Year"]==yr) & (full_df["Month"]==mo)]
+                vals.append(float(sub[col].sum()) if col in sub.columns else 0)
+            d[field] = vals
+        # ROI trend
+        d["roi"] = [(s-c)/c*100 if c>0 else 0 for c,s in zip(d["cost"],d["sales"])]
+        return d
+
+    all_trends = {"__total__": get_trend()}
+    for nm in camp_agg[camp_col].tolist():
+        all_trends[nm] = get_trend(nm)
+
+    chart_data_json = json.dumps({"labels": chart_labels, "trends": all_trends})
+
+    # Table rows
+    ts = "text-align:right;padding:6px 8px;border-bottom:0.5px solid #f3f4f6;font-size:12px;color:#374151;"
+
+    def dr_t3(r):
+        nm = str(r[camp_col]).replace("'","\\'")
+        return (f'<tr style="cursor:pointer;" onclick="sel(this,\'{nm}\')">' +
+            f'<td style="text-align:left;padding:6px 8px;border-bottom:0.5px solid #f3f4f6;font-weight:500;font-size:12px;">{r[camp_col]}</td>' +
+            f'<td style="{ts}">${r["Spend ($)"]:,.0f}</td>' +
+            f'<td style="{ts}">{int(r["CRM Leads"])}</td>' +
+            f'<td style="{ts}">{int(r["Appointments"])}</td>' +
+            f'<td style="{ts}">{int(r["Customers"])}</td>' +
+            f'<td style="{ts}">${r["Sales Amount ($)"]:,.0f}</td>' +
+            f'<td style="{ts}">{badge_t3(r["ROI"],0)}</td>' +
+            f'<td style="{ts}">{badge_t3(r["APT/Lead"],avg_al)}</td>' +
+            f'<td style="{ts}">{badge_t3(r["Order/APT"],avg_oa)}</td>' +
+            f'</tr>')
+
+    tbody = ('<tr style="background:#1f2937;color:#fff;font-weight:700;cursor:pointer;" onclick="sel(this,\'__total__\')">' +
+             f'<td style="text-align:left;padding:7px 8px;font-size:12px;color:#fff;">📊 Total</td>' +
+             f'<td style="text-align:right;padding:6px 8px;font-size:12px;color:#fff;">${tot.get("Spend ($)",0):,.0f}</td>' +
+             f'<td style="text-align:right;padding:6px 8px;font-size:12px;color:#fff;">{int(tot.get("CRM Leads",0))}</td>' +
+             f'<td style="text-align:right;padding:6px 8px;font-size:12px;color:#fff;">{int(tot.get("Appointments",0))}</td>' +
+             f'<td style="text-align:right;padding:6px 8px;font-size:12px;color:#fff;">{int(tot.get("Customers",0))}</td>' +
+             f'<td style="text-align:right;padding:6px 8px;font-size:12px;color:#fff;">${tot.get("Sales Amount ($)",0):,.0f}</td>' +
+             f'<td style="text-align:right;padding:6px 8px;font-size:12px;color:#fff;">{f2(tot_roi)}%</td>' +
+             f'<td style="text-align:right;padding:6px 8px;font-size:12px;color:#fff;">{f2(tot_al)}%</td>' +
+             f'<td style="text-align:right;padding:6px 8px;font-size:12px;color:#fff;">{f2(tot_oa)}%</td>' +
+             f'</tr>')
+
+    tbody += "".join(dr_t3(r) for _, r in camp_agg.iterrows())
+
+    html_part1 = """
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:12px;}
+thead tr{background:#111827;}
+th{padding:8px;font-size:10px;color:#9ca3af;text-transform:uppercase;text-align:right;letter-spacing:0.05em;}
+th:first-child{text-align:left;color:#fff;}
+tr.sel td{background:#dbeafe!important;}
+.cb{background:#fff;border:0.5px solid #e5e7eb;border-radius:10px;padding:14px;margin-top:20px;}
+.mt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.mb{font-size:11px;padding:4px 12px;border-radius:6px;border:0.5px solid #e5e7eb;cursor:pointer;background:#fff;color:#6b7280;font-weight:500;}
+.mb.on{background:#111827;color:#fff;border-color:#111827;}
+</style>
+<div style="overflow-x:auto;">
+<table>
+<thead><tr>
+<th style="text-align:left;color:#fff;min-width:200px;">Campaign</th>
+<th>Cost</th><th>Leads</th><th>APT</th><th>Customers</th>
+<th>Sales</th><th>ROI</th><th>APT/Lead</th><th>Order/APT</th>
+</tr></thead>
+<tbody id="tb">""" + tbody + """</tbody>
+</table></div>
+<div class="cb">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <b id="ctitle" style="font-size:13px;">📊 Total — Trend</b>
+    <div style="font-size:11px;color:#6b7280;">
+      <span style="display:inline-block;width:10px;height:3px;background:#1877F2;margin-right:4px;vertical-align:middle;"></span>This period
+    </div>
+  </div>
+  <div class="mt">
+    <button class="mb on" onclick="sm('leads',this)">Leads</button>
+    <button class="mb" onclick="sm('cost',this)">Spend</button>
+    <button class="mb" onclick="sm('apt',this)">APT</button>
+    <button class="mb" onclick="sm('cust',this)">Customers</button>
+    <button class="mb" onclick="sm('sales',this)">Sales</button>
+    <button class="mb" onclick="sm('roi',this)">ROI %</button>
+  </div>
+  <div style="position:relative;height:260px;"><canvas id="cc"></canvas></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+var D="""
+
+    html_part2 = """;
+var sk='__total__',cm='leads',ch=null;
+function sel(row,key){
+  if(sk===key){sk='__total__';document.querySelectorAll('tr').forEach(function(r){r.classList.remove('sel');});}
+  else{document.querySelectorAll('tr').forEach(function(r){r.classList.remove('sel');});row.classList.add('sel');sk=key;}
+  document.getElementById('ctitle').textContent=(sk==='__total__'?'📊 Total':sk)+' — Trend';
+  draw();
+}
+function sm(m,btn){cm=m;document.querySelectorAll('.mb').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');draw();}
+function draw(){
+  var t=D.trends[sk]||D.trends['__total__'];
+  var isR=cm==='roi';
+  if(ch){ch.destroy();ch=null;}
+  ch=new Chart(document.getElementById('cc'),{type:'line',data:{labels:D.labels,datasets:[
+    {data:t[cm]||[],borderColor:'#1877F2',backgroundColor:'rgba(24,119,242,0.08)',fill:true,tension:0.3,pointRadius:3}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+    tooltip:{callbacks:{label:function(c){return isR?' '+c.parsed.y.toFixed(1)+'%':' '+c.parsed.y.toLocaleString(undefined,{maximumFractionDigits:0});}}}},
+    scales:{x:{ticks:{font:{size:10},maxRotation:45,autoSkip:true},grid:{display:false}},
+            y:{min:0,ticks:{font:{size:10},callback:function(v){return isR?v.toFixed(0)+'%':v.toLocaleString();}},grid:{color:'#f3f4f6'}}}}});
+}
+draw();
+</script>"""
+
+    n_rows = len(camp_agg)
     import streamlit.components.v1 as components
-
-    tbl_html = """
-    <style>
-    body{margin:0;font-family:-apple-system,sans-serif}
-    table{width:100%;border-collapse:collapse;font-size:12px}
-    thead tr{background:#111827}
-    thead th{color:white;padding:9px 10px;text-align:left;font-weight:500;font-size:11px;letter-spacing:.04em;white-space:nowrap}
-    tbody tr{border-bottom:1px solid #e5e7eb;cursor:pointer}
-    tbody tr:hover td{background:#f0f7ff}
-    tbody tr.selected td{background:#dbeafe!important;font-weight:500}
-    tbody tr.total-row td{background:#f8fafc;font-weight:500}
-    tbody td{padding:8px 10px;color:#111827;white-space:nowrap}
-    </style>
-    <table id="ctable">
-    <thead><tr>
-      <th>Campaign</th><th>Cost</th><th>Leads</th><th>Cost/Lead</th>
-      <th>APT</th><th>APT/Lead</th><th>Customers</th><th>Order/APT</th><th>Sales</th><th>ROI</th>
-    </tr></thead>
-    <tbody>
-    """
-
-    rows_data = []
-    for _, row in disp.iterrows():
-        is_total = row["Campaign"] == "Total"
-        row_class = "total-row" if is_total else "camp-row"
-        camp_val = "" if is_total else str(row["Campaign"]).replace("'", "\'")
-        tbl_html += f'<tr class="{row_class}" onclick="selectCamp(this, \'{camp_val}\')">'
-        for col in ["Campaign","Cost","Leads","Cost/Lead","APT","APT/Lead","Customers","Order/APT","Sales","ROI"]:
-            tbl_html += f'<td>{row.get(col,"—")}</td>'
-        tbl_html += "</tr>"
-
-    tbl_html += """
-    </tbody></table>
-    <script>
-    var selected = null;
-    function selectCamp(tr, name) {
-        if (tr.classList.contains("total-row")) return;
-        if (selected === tr) {
-            tr.classList.remove("selected");
-            selected = null;
-            window.parent.postMessage({type:"streamlit:setComponentValue", value:""}, "*");
-        } else {
-            if (selected) selected.classList.remove("selected");
-            tr.classList.add("selected");
-            selected = tr;
-            window.parent.postMessage({type:"streamlit:setComponentValue", value:name}, "*");
-        }
-    }
-    </script>
-    """
-
-    components.html(
-        tbl_html,
-        height=min(600, (len(disp)+1)*35+60),
-        scrolling=True
-    )
-
-    # Get selected campaign from sidebar
-    sel_camp_name = st.session_state.get("trend_selected_camp", "All Campaigns")
-
-    # Use raw date-filtered data (before groupby) for chart
-    camp_col = "Campaign Objective" if "Campaign Objective" in camp_df.columns else "Campaign"
-
-    if sel_camp_name and sel_camp_name != "All Campaigns":
-        chart_df = camp_df[camp_df[camp_col].astype(str) == str(sel_camp_name)].copy()
-        chart_title = sel_camp_name
-        # Debug
-        st.caption(f"Showing: {sel_camp_name} — {len(chart_df)} rows found")
-    else:
-        chart_df = camp_df.copy()
-        chart_title = "All Campaigns"
-
-    # Metric toggle buttons
-    metric_opts   = ["Spend ($)","CRM Leads","Appointments","Customers","Sales Amount ($)"]
-    metric_labels = ["Spend","Leads","APT","Customers","Sales"]
-    if "trend_metric" not in st.session_state:
-        st.session_state.trend_metric = "CRM Leads"
-
-    st.markdown("<div style='margin-top:80px'></div>", unsafe_allow_html=True)
-    # Metric buttons using columns
-    cols = st.columns(len(metric_opts))
-    for i, (m, lbl) in enumerate(zip(metric_opts, metric_labels)):
-        if cols[i].button(
-            lbl, key=f"tmbtn_{i}",
-            use_container_width=True,
-            type="primary" if st.session_state.trend_metric == m else "secondary"
-        ):
-            st.session_state.trend_metric = m
-            st.rerun()
-    metric = st.session_state.trend_metric
-    sel_metric_lbl = metric_labels[metric_opts.index(metric)] if metric in metric_opts else metric
-
-    # Aggregate monthly
-    if "Year" in chart_df.columns and "Month" in chart_df.columns and len(chart_df) > 0:
-        chart_df["Year"]  = pd.to_numeric(chart_df["Year"],  errors="coerce").fillna(0).astype(int)
-        chart_df["Month"] = pd.to_numeric(chart_df["Month"], errors="coerce").fillna(0).astype(int)
-        chart_df = chart_df[(chart_df["Year"] > 0) & (chart_df["Month"] > 0)]
-        agg_c = {c:"sum" for c in metric_opts if c in chart_df.columns}
-        agg = chart_df.groupby(["Year","Month"]).agg(agg_c).reset_index()
-        agg["Period"] = pd.to_datetime(
-            agg.apply(lambda r: f"{int(r['Year'])}-{int(r['Month']):02d}-01", axis=1))
-        agg = agg.sort_values("Period").drop_duplicates(subset=["Period"])
-
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=agg["Period"], y=agg[metric],
-            mode="lines+markers",
-            line=dict(color="#1877F2", width=2),
-            marker=dict(size=5),
-            fill="tozeroy",
-            fillcolor="rgba(24,119,242,0.08)",
-            hovertemplate=f"<b>%{{x|%b %Y}}</b><br>{sel_metric_lbl}: %{{y:,.0f}}<extra></extra>"
-        ))
-        fig.update_layout(
-            height=300,
-            title=dict(text=f"{chart_title} — {sel_metric_lbl}", font=dict(size=13,color="#111827"), x=0),
-            margin=dict(t=40,b=40,l=55,r=20),
-            paper_bgcolor="white", plot_bgcolor="white",
-            xaxis=dict(showgrid=False, tickformat="%b %Y", dtick="M1"),
-            yaxis=dict(showgrid=True, gridcolor="#f3f4f6"),
-            hovermode="x unified", showlegend=False
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("No data available.")
+    components.html(html_part1 + chart_data_json + html_part2, height=n_rows*34+520, scrolling=False)
 
