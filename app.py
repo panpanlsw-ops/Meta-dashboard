@@ -457,30 +457,49 @@ if st.session_state.page == "overview":
 elif st.session_state.page == "territory":
 
     if "Territory Summary" not in data:
-        st.warning("No Territory Performance sheet found."); st.stop()
+        st.warning("No Territory Summary sheet found."); st.stop()
 
     raw = data["Territory Summary"].copy()
 
-    # Apply filters from sidebar
-    tdf = raw.copy()
-    # Filter by date range
-    if "Year" in tdf.columns and "Month" in tdf.columns:
-        tdf["Year"] = pd.to_numeric(tdf["Year"], errors="coerce").fillna(0).astype(int)
-        tdf["Month"] = pd.to_numeric(tdf["Month"], errors="coerce").fillna(0).astype(int)
-        tdf = tdf[
-            ((tdf["Year"] > from_year) |
-             ((tdf["Year"] == from_year) & (tdf["Month"] >= from_m))) &
-            ((tdf["Year"] < to_year) |
-             ((tdf["Year"] == to_year) & (tdf["Month"] <= to_m)))
-        ]
-    if sel_off != "All":
-        tdf = tdf[tdf["Territory"] == sel_off]
+    # ── Date filters on top ───────────────────────────────────────
+    MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+    all_years = sorted(raw["Year"].dropna().unique().tolist()) if "Year" in raw.columns else [2026]
+    all_years = [int(y) for y in all_years if str(y).strip() not in ["","nan"]]
 
-    # Show date range label
-    dr_label = f"{from_month} {from_year} – {to_month} {to_year}"
-    st.markdown(
-        f"<p style='font-size:0.78rem;color:#6b7280;margin-bottom:12px'>Showing: {dr_label}</p>",
-        unsafe_allow_html=True)
+    dc1,dc2,dc3,dc4,dc5 = st.columns([2,2,0.3,2,2])
+    with dc1:
+        st.markdown("<p style='font-size:0.72rem;color:#6b7280;margin-bottom:3px'>From Month</p>", unsafe_allow_html=True)
+        t_from_month = st.selectbox("FM", MONTHS, index=0, label_visibility="collapsed", key="t_from_month")
+    with dc2:
+        st.markdown("<p style='font-size:0.72rem;color:#6b7280;margin-bottom:3px'>From Year</p>", unsafe_allow_html=True)
+        t_from_year = st.selectbox("FY", all_years, index=0, label_visibility="collapsed", key="t_from_year")
+    with dc3:
+        st.markdown("<p style='margin-top:22px;color:#6b7280;font-size:13px'>to</p>", unsafe_allow_html=True)
+    with dc4:
+        st.markdown("<p style='font-size:0.72rem;color:#6b7280;margin-bottom:3px'>To Month</p>", unsafe_allow_html=True)
+        t_to_month = st.selectbox("TM", MONTHS, index=len(MONTHS)-1, label_visibility="collapsed", key="t_to_month")
+    with dc5:
+        st.markdown("<p style='font-size:0.72rem;color:#6b7280;margin-bottom:3px'>To Year</p>", unsafe_allow_html=True)
+        t_to_year = st.selectbox("TY", all_years, index=len(all_years)-1, label_visibility="collapsed", key="t_to_year")
+
+    t_from_m = MONTHS.index(t_from_month) + 1
+    t_to_m   = MONTHS.index(t_to_month) + 1
+    t_from_year = int(t_from_year)
+    t_to_year   = int(t_to_year)
+
+    dr_label = f"{t_from_month} {t_from_year} – {t_to_month} {t_to_year}"
+    st.markdown(f"<p style='font-size:0.78rem;color:#6b7280;margin-bottom:14px'>Showing: {dr_label}</p>", unsafe_allow_html=True)
+
+    # ── Filter data ───────────────────────────────────────────────
+    tdf = raw.copy()
+    tdf["Year"]  = pd.to_numeric(tdf["Year"],  errors="coerce").fillna(0).astype(int)
+    tdf["Month"] = pd.to_numeric(tdf["Month"], errors="coerce").fillna(0).astype(int)
+    tdf = tdf[
+        ((tdf["Year"] > t_from_year) |
+         ((tdf["Year"] == t_from_year) & (tdf["Month"] >= t_from_m))) &
+        ((tdf["Year"] < t_to_year) |
+         ((tdf["Year"] == t_to_year) & (tdf["Month"] <= t_to_m)))
+    ]
 
     # Aggregate by territory
     terr = tdf.groupby("Territory").agg({
@@ -489,12 +508,15 @@ elif st.session_state.page == "territory":
     }).reset_index()
     tot = terr.sum(numeric_only=True)
 
-    terr["Leads %"]     = (terr["Unique Leads"]    /tot["Unique Leads"]     *100).round(2) if tot["Unique Leads"] else 0
-    terr["Sales %"]     = (terr["Sales Amount ($)"]/tot["Sales Amount ($)"] *100).round(2) if tot["Sales Amount ($)"] else 0
-    terr["APT/Leads"]   = (terr["Appointments"]    /terr["Unique Leads"].replace(0,1)*100).round(2)
-    terr["Order/APT"]   = (terr["Customers"]       /terr["Appointments"].replace(0,1)*100).round(2)
-    terr["Order/Leads"] = (terr["Customers"]       /terr["Unique Leads"].replace(0,1)*100).round(2)
-    terr = terr.sort_values("Sales Amount ($)", ascending=False)
+    # Calculate % from raw numbers
+    total_leads = tot["Unique Leads"]     if tot["Unique Leads"]     else 1
+    total_sales = tot["Sales Amount ($)"] if tot["Sales Amount ($)"] else 1
+    terr["Leads %"]     = (terr["Unique Leads"]     / total_leads * 100).round(2)
+    terr["Sales %"]     = (terr["Sales Amount ($)"] / total_sales * 100).round(2)
+    terr["APT/Leads"]   = (terr["Appointments"]     / terr["Unique Leads"].replace(0,1)   * 100).round(2)
+    terr["Order/APT"]   = (terr["Customers"]        / terr["Appointments"].replace(0,1)   * 100).round(2)
+    terr["Order/Leads"] = (terr["Customers"]        / terr["Unique Leads"].replace(0,1)   * 100).round(2)
+    terr = terr.sort_values(["Unique Leads","Sales Amount ($)"], ascending=[False,False])
 
     ul  = int(tot["Unique Leads"])
     apt = int(tot["Appointments"])
@@ -502,141 +524,144 @@ elif st.session_state.page == "territory":
     sal = tot["Sales Amount ($)"]
     ap  = round(apt/ul*100) if ul else 0
 
-    # ── KPI strip ──────────────────────────────────────────────────
+    # ── KPI strip ─────────────────────────────────────────────────
     def tcell(color, label, value):
-        return (
-            f'<div style="background:white;border:1px solid #e5e7eb;border-radius:10px;' +
-            f'padding:16px 14px 14px;position:relative;box-shadow:0 1px 4px rgba(0,0,0,0.05)">' +
-            f'<div style="position:absolute;top:0;left:0;right:0;height:4px;border-radius:10px 10px 0 0;background:{color}"></div>' +
-            f'<div style="font-size:0.62rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">{label}</div>' +
-            f'<div style="font-size:1.3rem;font-weight:700;color:#111827">{value}</div></div>'
-        )
+        return (f'<div style="background:white;border:1px solid #e5e7eb;border-radius:10px;padding:14px;position:relative">' +
+                f'<div style="height:3px;border-radius:3px;background:{color};margin-bottom:8px"></div>' +
+                f'<div style="font-size:0.62rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">{label}</div>' +
+                f'<div style="font-size:1.3rem;font-weight:700;color:#111827">{value}</div></div>')
 
     st.markdown(
         '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px">' +
-        tcell("#1877F2","Total Leads",     fn(ul))  +
-        tcell("#06b6d4","Appointments",    fn(apt)) +
-        tcell("#ec4899","Customers",       fn(cu))  +
-        tcell("#22c55e","Total Sales",     fc(sal)) +
-        tcell("#f59e0b","APT / Leads",     f"{ap}%") +
+        tcell("#1877F2","Total Leads",  fn(ul))  +
+        tcell("#06b6d4","Appointments", fn(apt)) +
+        tcell("#ec4899","Customers",    fn(cu))  +
+        tcell("#22c55e","Total Sales",  fc(sal)) +
+        tcell("#f59e0b","APT / Leads",  f"{ap}%") +
         '</div>', unsafe_allow_html=True)
 
-    # ── Regional Office Performance table ──────────────────────────
-    # Sort by Unique Leads desc, then Sales Amount desc
-    terr = terr.sort_values(["Unique Leads","Sales Amount ($)"], ascending=[False,False])
+    # ── Table header ──────────────────────────────────────────────
+    st.markdown(
+        f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+        f'<span style="font-size:0.9rem;font-weight:600;color:#111827">Regional Office Performance</span>' +
+        f'<span style="font-size:0.72rem;color:#6b7280;background:#f3f4f6;padding:3px 10px;border-radius:20px">{dr_label}</span>' +
+        f'</div>', unsafe_allow_html=True)
+
+    # ── HTML table with progress bars ─────────────────────────────
+    import streamlit.components.v1 as components
 
     def bar(pct, color):
         w = min(float(pct), 100)
-        return (f'<div style="display:flex;align-items:center;gap:6px">' +
-                f'<div style="flex:1;height:4px;background:#e5e7eb;border-radius:3px;min-width:50px">' +
+        return (f'<div style="display:flex;align-items:center;gap:4px">' +
+                f'<div style="width:50px;height:3px;background:#e5e7eb;border-radius:3px;flex-shrink:0">' +
                 f'<div style="width:{w}%;height:100%;background:{color};border-radius:3px"></div></div>' +
-                f'<span style="font-size:11px;color:#374151;white-space:nowrap">{pct:.2f}%</span></div>')
+                f'<span style="font-size:10.5px;color:#374151">{pct:.1f}%</span></div>')
 
-    html = """
-    <style>
-    .terr-tbl{width:100%;border-collapse:collapse;font-size:12px}
-    .terr-tbl thead tr{background:#111827}
-    .terr-tbl thead th{color:white;padding:9px 10px;text-align:left;font-weight:500;
-        font-size:11px;letter-spacing:0.05em;white-space:nowrap}
-    .terr-tbl tbody tr{border-bottom:1px solid #e5e7eb}
-    .terr-tbl tbody tr:hover{background:#f0f7ff}
-    .terr-tbl td{padding:8px 10px;white-space:nowrap;color:#111827;font-size:12px}
-    .terr-tbl tr.tot td{background:#dbeafe;color:#1e3a5f;font-weight:600;border-bottom:2px solid #93c5fd}
+    al_tot = round(tot["Appointments"]/tot["Unique Leads"]*100,1) if tot["Unique Leads"] else 0
+    oa_tot = round(tot["Customers"]/tot["Appointments"]*100,1)   if tot["Appointments"] else 0
+    ol_tot = round(tot["Customers"]/tot["Unique Leads"]*100,1)   if tot["Unique Leads"] else 0
+
+    html = """<style>
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+    table{width:100%;border-collapse:collapse;font-size:11.5px;background:white;
+          border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+    thead tr{background:#111827}
+    thead th{color:white;padding:9px 7px;text-align:left;font-weight:500;
+             font-size:10px;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+    tbody tr{border-bottom:1px solid #f3f4f6;cursor:pointer}
+    tbody tr:hover td{background:#f0f7ff}
+    tbody td{padding:8px 7px;color:#111827;white-space:nowrap}
+    tbody tr.tot td{background:#EBF3FF;color:#1e3a5f;font-weight:600;border-bottom:2px solid #bfdbfe}
+    tbody tr.open{background:#EBF3FF}
+    tbody tr.camp{background:#f5f8ff;border-bottom:1px solid #eff0f6}
+    tbody tr.camp td{font-size:11px;color:#374151}
+    tbody tr.camp td:first-child{padding-left:28px;color:#111827}
+    .arrow{display:inline-block;font-size:9px;color:#9ca3af;margin-right:4px;transition:transform 0.15s}
+    .arrow.open{transform:rotate(90deg)}
     </style>
-    <div style="overflow-x:auto">
-    <table class="terr-tbl">
-    <thead><tr>
+    <table><thead><tr>
       <th>Regional Office</th>
       <th>Unique Leads</th><th>New Leads</th><th>APT</th><th>Quote</th>
       <th>Customers</th><th>Sales Amount</th>
       <th>Leads %</th><th>Sales %</th>
-      <th>APT/Leads</th><th>Order/Leads</th>
-    </tr></thead>
-    <tbody>"""
+      <th>APT/Leads</th><th>Order/APT</th><th>Order/Leads</th>
+    </tr></thead><tbody>"""
 
-    al_tot = round(tot["Appointments"]/tot["Unique Leads"]*100,2) if tot["Unique Leads"] else 0
-    ol_tot = round(tot["Customers"]/tot["Unique Leads"]*100,2) if tot["Unique Leads"] else 0
+    # Total row
     html += (f'<tr class="tot"><td><b>Total</b></td>' +
              f'<td>{fn(tot["Unique Leads"])}</td><td>{fn(tot["New Leads"])}</td>' +
              f'<td>{fn(tot["Appointments"])}</td><td>{fn(tot.get("Quote",0))}</td>' +
              f'<td>{fn(tot["Customers"])}</td><td>{fc(tot["Sales Amount ($)"])}</td>' +
-             f'<td>100%</td><td>100%</td>' +
-             f'<td>{al_tot:.1f}%</td><td>{ol_tot:.2f}%</td></tr>')
+             f'<td>{bar(100,"#1877F2")}</td><td>{bar(100,"#22c55e")}</td>' +
+             f'<td>{al_tot:.1f}%</td><td>{oa_tot:.1f}%</td><td>{ol_tot:.1f}%</td></tr>')
+
+    # Territory rows with campaign breakdown
+    t_detail = data.get("Territory Detail", pd.DataFrame())
+    if not t_detail.empty and "Year" in t_detail.columns:
+        t_detail["Year"]  = pd.to_numeric(t_detail["Year"],  errors="coerce").fillna(0).astype(int)
+        t_detail["Month"] = pd.to_numeric(t_detail["Month"], errors="coerce").fillna(0).astype(int)
+        t_detail = t_detail[
+            ((t_detail["Year"] > t_from_year) |
+             ((t_detail["Year"] == t_from_year) & (t_detail["Month"] >= t_from_m))) &
+            ((t_detail["Year"] < t_to_year) |
+             ((t_detail["Year"] == t_to_year) & (t_detail["Month"] <= t_to_m)))
+        ]
 
     for idx, r in terr.iterrows():
-        tid = f"t{idx}"
-        # Territory row — clickable
-        html += (f'<tr onclick="tog(\'{tid}\')" style="cursor:pointer;background:white;border-bottom:1px solid #e5e7eb">' +
-                 f'<td><span id="{tid}-a" style="display:inline-block;font-size:10px;color:#9ca3af;margin-right:6px;transition:transform 0.15s">▶</span>' +
-                 f'<b>{r["Territory"]}</b></td>' +
+        tid   = f"t{idx}"
+        lp    = float(r.get("Leads %", 0))
+        sp    = float(r.get("Sales %", 0))
+        al    = float(r.get("APT/Leads", 0))
+        oa    = float(r.get("Order/APT", 0))
+        ol    = float(r.get("Order/Leads", 0))
+
+        html += (f'<tr onclick="tog(\'{tid}\')" style="cursor:pointer">' +
+                 f'<td><span class="arrow" id="{tid}-a">▶</span><b>{r["Territory"]}</b></td>' +
                  f'<td>{int(r["Unique Leads"])}</td><td>{int(r["New Leads"])}</td>' +
-                 f'<td>{int(r["Appointments"])}</td><td>{int(r["Quote"])}</td>' +
+                 f'<td>{int(r["Appointments"])}</td><td>{int(r.get("Quote",0))}</td>' +
                  f'<td>{int(r["Customers"])}</td><td>{fc(r["Sales Amount ($)"])}</td>' +
-                 f'<td>{bar(min(100, float(r.get("Leads %", 0))), "#1877F2")}</td>' +
-                 f'<td>{bar(min(100, float(r.get("Sales %", 0))), "#22c55e")}</td>' +
-                 f'<td>{str(r.get("APT/Leads","0%"))}</td>' +
-                 f'<td>{str(r.get("Order/Leads","0%"))}</td></tr>')
+                 f'<td>{bar(lp,"#1877F2")}</td><td>{bar(sp,"#22c55e")}</td>' +
+                 f'<td>{al:.1f}%</td><td>{oa:.1f}%</td><td>{ol:.1f}%</td></tr>')
 
         # Campaign breakdown
-        # Use Territory Detail filtered by date range
-        t_detail = data.get("Territory Detail", pd.DataFrame())
         if not t_detail.empty and "Territory" in t_detail.columns:
-            t_det = t_detail.copy()
-            if "Year" in t_det.columns and "Month" in t_det.columns:
-                t_det["Year"]  = pd.to_numeric(t_det["Year"],  errors="coerce").fillna(0).astype(int)
-                t_det["Month"] = pd.to_numeric(t_det["Month"], errors="coerce").fillna(0).astype(int)
-                t_det = t_det[
-                    ((t_det["Year"] > from_year) |
-                     ((t_det["Year"] == from_year) & (t_det["Month"] >= from_m))) &
-                    ((t_det["Year"] < to_year) |
-                     ((t_det["Year"] == to_year) & (t_det["Month"] <= to_m)))
-                ]
-            camp_data = t_det[t_det["Territory"] == r["Territory"]].groupby("Campaign").agg({
+            cd = t_detail[t_detail["Territory"]==r["Territory"]].groupby("Campaign").agg({
                 "Unique Leads":"sum","New Leads":"sum","Appointments":"sum",
                 "Quote":"sum","Customers":"sum","Sales Amount ($)":"sum"
             }).reset_index().sort_values("Unique Leads", ascending=False)
-        else:
-            camp_data = pd.DataFrame()
 
-        t_ul = r["Unique Leads"] if r["Unique Leads"] else 1
-        t_sa = r["Sales Amount ($)"] if r["Sales Amount ($)"] else 1
+            t_ul = r["Unique Leads"] if r["Unique Leads"] else 1
+            t_sa = r["Sales Amount ($)"] if r["Sales Amount ($)"] else 1
 
-        for _, cr in camp_data.iterrows():
-            c_leads_pct = cr["Unique Leads"] / t_ul * 100 if t_ul else 0
-            c_sales_pct = cr["Sales Amount ($)"] / t_sa * 100 if t_sa else 0
-            c_apt_leads = cr["Appointments"] / cr["Unique Leads"] * 100 if cr["Unique Leads"] else 0
-            c_ord_leads = cr["Customers"] / cr["Unique Leads"] * 100 if cr["Unique Leads"] else 0
-            html += (f'<tr class="{tid}-camp" style="display:none;background:#f5f8ff;border-bottom:1px solid #eff0f6">' +
-                     f'<td style="padding-left:28px;color:#111827;font-weight:400;font-size:11.5px">{cr["Campaign"]}</td>' +
-                     f'<td style="font-size:11.5px">{int(cr["Unique Leads"])}</td>' +
-                     f'<td style="font-size:11.5px">{int(cr["New Leads"])}</td>' +
-                     f'<td style="font-size:11.5px">{int(cr["Appointments"])}</td>' +
-                     f'<td style="font-size:11.5px">{int(cr.get("Quote",0))}</td>' +
-                     f'<td style="font-size:11.5px">{int(cr["Customers"])}</td>' +
-                     f'<td style="font-size:11.5px">{fc(cr["Sales Amount ($)"])}</td>' +
-                     f'<td>{bar(c_leads_pct, "#1877F2")}</td>' +
-                     f'<td>{bar(c_sales_pct, "#22c55e")}</td>' +
-                     f'<td style="font-size:11.5px">{c_apt_leads:.1f}%</td>' +
-                     f'<td style="font-size:11.5px">{c_ord_leads:.2f}%</td></tr>')
+            for _, cr in cd.iterrows():
+                c_lp = min(100, cr["Unique Leads"]     / t_ul * 100)
+                c_sp = min(100, cr["Sales Amount ($)"] / t_sa * 100)
+                c_al = cr["Appointments"]/cr["Unique Leads"]*100 if cr["Unique Leads"] else 0
+                c_oa = cr["Customers"]/cr["Appointments"]*100    if cr["Appointments"] else 0
+                c_ol = cr["Customers"]/cr["Unique Leads"]*100    if cr["Unique Leads"] else 0
+                html += (f'<tr class="{tid}-camp" style="display:none">' +
+                         f'<td style="padding-left:28px">{str(cr["Campaign"])}</td>' +
+                         f'<td>{int(cr["Unique Leads"])}</td><td>{int(cr["New Leads"])}</td>' +
+                         f'<td>{int(cr["Appointments"])}</td><td>{int(cr.get("Quote",0))}</td>' +
+                         f'<td>{int(cr["Customers"])}</td><td>{fc(cr["Sales Amount ($)"])}</td>' +
+                         f'<td>{bar(c_lp,"#1877F2")}</td><td>{bar(c_sp,"#22c55e")}</td>' +
+                         f'<td>{c_al:.1f}%</td><td>{c_oa:.1f}%</td><td>{c_ol:.1f}%</td></tr>')
 
-    html += """</tbody></table></div>
+    html += """</tbody></table>
     <script>
     function tog(id){
       var rows=document.querySelectorAll('.'+id+'-camp');
       var arrow=document.getElementById(id+'-a');
       var open=rows[0]&&rows[0].style.display!=='none'&&rows[0].style.display!=='';
       rows.forEach(function(r){r.style.display=open?'none':'table-row';});
-      if(arrow){arrow.style.transform=open?'rotate(0deg)':'rotate(90deg)';}
+      if(arrow){arrow.classList.toggle('open',!open);}
     }
     </script>"""
-    import streamlit.components.v1 as components
+
     n_terr = len(terr)
-    t_det = data.get("Territory Detail", pd.DataFrame())
-    if not t_det.empty and "Campaign" in t_det.columns:
-        n_camp = sum(len(t_det[t_det["Territory"]==r["Territory"]]["Campaign"].unique()) for _,r in terr.iterrows())
-    else:
-        n_camp = 0
-    tbl_height = max(500, (n_terr + 2) * 38 + n_camp * 34)
+    n_camp = sum(len(t_detail[t_detail["Territory"]==r["Territory"]]["Campaign"].unique())
+                 for _,r in terr.iterrows()) if not t_detail.empty and "Territory" in t_detail.columns else 0
+    tbl_height = max(400, (n_terr+2)*38 + n_camp*34)
     components.html(html, height=tbl_height, scrolling=True)
 
 # ── PAGE 3 ─────────────────────────────────────────────────────────────────────
