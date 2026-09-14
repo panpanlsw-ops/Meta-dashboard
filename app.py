@@ -279,22 +279,16 @@ with st.sidebar:
     if "Campaign Performance" in data:
         cp = data["Campaign Performance"]
         if "Year" in cp.columns:
-            all_years = sorted(cp["Year"].unique().tolist())
+            all_years = sorted([int(y) for y in cp["Year"].dropna().unique().tolist()])
     if not all_years:
         all_years = [2024, 2025, 2026]
-
-    st.markdown("<p style='color:#888888;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin:6px 0 4px'>From</p>", unsafe_allow_html=True)
-    fc1, fc2 = st.columns(2)
-    from_month = fc1.selectbox("FM", MONTHS, index=0, label_visibility="collapsed", key="from_month")
-    from_year  = fc2.selectbox("FY", all_years, index=0, label_visibility="collapsed", key="from_year")
-    st.markdown("<p style='color:#888888;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin:6px 0 4px'>To</p>", unsafe_allow_html=True)
-    tc1, tc2 = st.columns(2)
-    to_month = tc1.selectbox("TM", MONTHS, index=len(MONTHS)-1, label_visibility="collapsed", key="to_month")
-    to_year  = tc2.selectbox("TY", all_years, index=len(all_years)-1, label_visibility="collapsed", key="to_year")
-    from_m    = MONTHS.index(from_month) + 1
-    to_m      = MONTHS.index(to_month) + 1
-    from_year = int(from_year)
-    to_year   = int(to_year)
+    # Default values — Tab 1 and Tab 3 use full range
+    from_month = MONTHS[0]
+    from_year  = all_years[0]
+    to_month   = MONTHS[-1]
+    to_year    = all_years[-1]
+    from_m     = 1
+    to_m       = 12
 
     st.markdown("---")
     if st.button("🔄 Refresh Data", use_container_width=True):
@@ -462,6 +456,7 @@ elif st.session_state.page == "territory":
     raw = data["Territory Summary"].copy()
 
     # ── Date filters on top ───────────────────────────────────────
+    st.markdown("<style>.stSelectbox>div>div{background:white!important;color:#111827!important}</style>", unsafe_allow_html=True)
     MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
     all_years = sorted(raw["Year"].dropna().unique().tolist()) if "Year" in raw.columns else [2026]
     all_years = [int(y) for y in all_years if str(y).strip() not in ["","nan"]]
