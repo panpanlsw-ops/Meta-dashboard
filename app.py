@@ -8,12 +8,14 @@ st.set_page_config(
     page_title="Meta Ads Dashboard",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 st.markdown("""
 <style>
 #MainMenu, footer { display:none!important }
+[data-testid="stSidebar"] { display:none!important }
+[data-testid="collapsedControl"] { display:none!important }
 header[data-testid="stHeader"] { display:none!important }
 [data-testid="collapsedControl"] { display:none!important }
 
@@ -222,129 +224,89 @@ if "Territory Performance" in data:
     off_list += sorted(data["Territory Summary"]["Territory"].unique().tolist())
 
 # ════════════════════════════════════════════════════════════
-# SIDEBAR
+# NAVIGATION & SHARED VARIABLES
 # ════════════════════════════════════════════════════════════
-with st.sidebar:
-    st.markdown(f"""
-    <div style="background:#111111;margin:-1rem -1rem 1rem -1rem;padding:20px 16px 16px;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="background:#1877F2;border-radius:8px;width:36px;height:36px;
-                    display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 24" height="16">
-            <path d="M2 12C2 7.2 5.2 3 9.2 3c2.2 0 4.2 1.2 5.8 3.3C16.6 4.2 18.6 3 20.6 3
-            c4 0 7.2 4.2 7.2 9 0 2.5-.8 4.8-2.1 6.4-1.2 1.4-2.7 2.2-4.3 2.2
-            -2 0-3.6-1-5.6-3.9-2 2.9-3.6 3.9-5.6 3.9-1.6 0-3.1-.8-4.3-2.2
-            C2.8 16.8 2 14.5 2 12zm7.2-5.5C6 6.5 4 9 4 12s2 5.5 5.2 5.5
-            c1.4 0 2.6-.8 4.2-3.4-1.6-2.8-2.8-4.6-4.2-4.6zm11.4 0c-1.4 0-2.6 1.8-4.2 4.6
-            1.6 2.6 2.8 3.4 4.2 3.4 3.2 0 5.2-2.5 5.2-5.5s-2-5.5-5.2-5.5z" fill="white"/>
-          </svg>
-        </div>
-        <div>
-          <div style="color:white;font-size:1rem;font-weight:700">Meta Ads</div>
-          <div style="color:#888;font-size:0.72rem">Dashboard</div>
-        </div>
-      </div>
+if "page" not in st.session_state:
+    st.session_state.page = "overview"
+
+# Shared date variables (used by overview and trends)
+MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+all_years = []
+if "Campaign Performance" in data:
+    cp = data["Campaign Performance"]
+    if "Year" in cp.columns:
+        all_years = sorted([int(y) for y in cp["Year"].dropna().unique().tolist()])
+if not all_years:
+    all_years = [2024, 2025, 2026]
+
+from_month = MONTHS[0]
+from_year  = all_years[0]
+to_month   = MONTHS[-1]
+to_year    = all_years[-1]
+from_m     = 1
+to_m       = 12
+sel_camp   = "All"
+sel_off    = "All"
+
+# ── Top Header ────────────────────────────────────────────
+from datetime import date as _dt
+_today_str = _dt.today().strftime("%a, %b %d %Y")
+
+st.markdown(f"""
+<div style="display:flex;align-items:center;justify-content:space-between;
+            padding:12px 0;margin-bottom:0;border-bottom:1px solid #e5e7eb">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="background:#1877F2;border-radius:8px;width:36px;height:36px;
+                display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 24" height="16">
+        <path d="M2 12C2 7.2 5.2 3 9.2 3c2.2 0 4.2 1.2 5.8 3.3C16.6 4.2 18.6 3 20.6 3
+        c4 0 7.2 4.2 7.2 9 0 2.5-.8 4.8-2.1 6.4-1.2 1.4-2.7 2.2-4.3 2.2
+        -2 0-3.6-1-5.6-3.9-2 2.9-3.6 3.9-5.6 3.9-1.6 0-3.1-.8-4.3-2.2
+        C2.8 16.8 2 14.5 2 12z" fill="white"/>
+      </svg>
     </div>
-    """, unsafe_allow_html=True)
+    <div>
+      <div style="font-size:1rem;font-weight:700;color:#111827">Meta Ads Dashboard</div>
+      <div style="font-size:0.75rem;color:#6b7280">LifeSource Water</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span style="font-size:0.82rem;color:#6b7280">{_today_str}</span>
+    {'<button onclick="window.location.reload()" style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:6px;padding:5px 12px;font-size:0.78rem;cursor:pointer;color:#374151">🔄 Refresh</button>' if False else ''}
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
-    sel_camp = "All"
-    sel_off  = "All"
-    date_range = None
-
-    # Campaign selector — only show in Trends tab
-    if st.session_state.get("page","overview") == "trends" and "Campaign Performance" in data:
-        st.markdown("<p style='color:#888888;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin:8px 0 4px'>Campaign</p>", unsafe_allow_html=True)
-        try:
-            cp = data["Campaign Performance"]
-            # Try Campaign Objective first, then Campaign
-            camp_col = "Campaign Objective" if "Campaign Objective" in cp.columns else "Campaign"
-            camp_names_sb = ["All Campaigns"] + sorted([
-                str(x) for x in cp[camp_col].dropna().unique().tolist()
-                if str(x) not in ["", "nan", "0"]
-            ])
-        except Exception:
-            camp_names_sb = ["All Campaigns"]
-        if "trend_selected_camp" not in st.session_state:
-            st.session_state["trend_selected_camp"] = "All Campaigns"
-        sel_trend_sb = st.selectbox(
-            "Camp", camp_names_sb,
-            index=camp_names_sb.index(st.session_state["trend_selected_camp"])
-                  if st.session_state["trend_selected_camp"] in camp_names_sb else 0,
-            label_visibility="collapsed",
-            key="trend_camp_sidebar"
-        )
-        st.session_state["trend_selected_camp"] = sel_trend_sb
-    MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
-    all_years = []
-    if "Campaign Performance" in data:
-        cp = data["Campaign Performance"]
-        if "Year" in cp.columns:
-            all_years = sorted([int(y) for y in cp["Year"].dropna().unique().tolist()])
-    if not all_years:
-        all_years = [2024, 2025, 2026]
-    # Default values — Tab 1 and Tab 3 use full range
-    from_month = MONTHS[0]
-    from_year  = all_years[0]
-    to_month   = MONTHS[-1]
-    to_year    = all_years[-1]
-    from_m     = 1
-    to_m       = 12
-
-    st.markdown("---")
+# ── Refresh button ────────────────────────────────────────
+rcol, _ = st.columns([1, 6])
+with rcol:
     if st.button("🔄 Refresh Data", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
-    st.markdown("---")
-    st.markdown("**VIEWS**")
 
-    for key,icon,label in [("overview","📊","MTD Overview"),
-                            ("territory","🗺️","By Territory"),
-                            ("trends","📈","Trends")]:
-        active = st.session_state.page == key
-        if st.button(f"{icon}  {label}", key=f"nav_{key}",
-                     use_container_width=True,
-                     type="primary" if active else "secondary"):
-            st.session_state.page = key
-            st.rerun()
+# ── Tab navigation ────────────────────────────────────────
+tabs_def = [("overview","📊 MTD Overview"),("territory","🗺️ By Territory"),("trends","📈 Trends")]
+t1,t2,t3 = st.tabs([label for _,label in tabs_def])
 
 # ════════════════════════════════════════════════════════════
 # MAIN CONTENT
 # ════════════════════════════════════════════════════════════
-titles = {"overview":"MTD Overview","territory":"By Territory","trends":"Trends"}
-
-# Top bar — Meta Ads brand + LifeSource logo side by side
-st.markdown(
-    f'<div style="background:#1877F2;padding:10px 20px;border-radius:8px;' +
-    f'display:flex;align-items:center;gap:10px;margin-bottom:18px">' +
-    f'<div style="background:white;border-radius:6px;padding:3px 10px;display:flex;align-items:center">' +
-    f'<img src="data:image/png;base64,{LS_B64}" height="24" style="display:block;object-fit:contain">' +
-    f'</div>' +
-    f'<span style="width:1px;height:22px;background:rgba(255,255,255,0.35);display:inline-block"></span>' +
-    f'<span style="color:white;font-weight:700;font-size:1rem">Meta Ads</span>' +
-    f'<span style="width:1px;height:22px;background:rgba(255,255,255,0.35);display:inline-block"></span>' +
-    f'<span style="color:white;font-size:0.9rem;font-weight:600">{titles[st.session_state.page]}</span>' +
-    f'<span style="margin-left:auto;color:rgba(255,255,255,0.85);font-size:0.8rem">{from_month} {from_year} – {to_month} {to_year}</span>' +
-    f'</div>', unsafe_allow_html=True)
-
-# ── PAGE 1 ─────────────────────────────────────────────────────────────────────
-if st.session_state.page == "overview":
+with t1:
 
     if "Overview" in data:
         ov_all = data["Overview"].copy()
-        # Ensure Year and Month are integers
         ov_all["Year"]  = pd.to_numeric(ov_all["Year"],  errors="coerce").fillna(0).astype(int)
         ov_all["Month"] = pd.to_numeric(ov_all["Month"], errors="coerce").fillna(0).astype(int)
-        # Ensure numeric columns are numeric
         for col in ["CRM Leads","Appointments","Customers","Sales Amount ($)","Spend ($)"]:
             if col in ov_all.columns:
                 ov_all[col] = pd.to_numeric(ov_all[col], errors="coerce").fillna(0)
-        # Filter by selected date range
-        ov = ov_all[
-            ((ov_all["Year"] > from_year) |
-             ((ov_all["Year"] == from_year) & (ov_all["Month"] >= from_m))) &
-            ((ov_all["Year"] < to_year) |
-             ((ov_all["Year"] == to_year) & (ov_all["Month"] <= to_m)))
-        ]
+        # MTD Overview always shows current month only
+        from datetime import date as _date_ov
+        _now = _date_ov.today()
+        ov = ov_all[(ov_all["Year"] == _now.year) & (ov_all["Month"] == _now.month)]
+        if len(ov) == 0:  # fallback to latest available month
+            ov = ov_all[ov_all["Year"] == ov_all["Year"].max()]
+            ov = ov[ov["Month"] == ov["Month"].max()]
         ov_sum = ov[["CRM Leads","Appointments","Customers","Sales Amount ($)","Spend ($)"]].sum()
 
         import calendar
@@ -392,16 +354,19 @@ if st.session_state.page == "overview":
 
     if "Campaign Performance" in data:
         camp_df=data["Campaign Performance"].copy()
-        # Filter by date range
+        # Filter to current month only for MTD Overview
+        from datetime import date as _dt_c
+        _now_c = _dt_c.today()
         if "Year" in camp_df.columns and "Month" in camp_df.columns:
-            camp_df["Year"] = pd.to_numeric(camp_df["Year"], errors="coerce").fillna(0).astype(int)
-        camp_df["Month"] = pd.to_numeric(camp_df["Month"], errors="coerce").fillna(0).astype(int)
-        camp_df = camp_df[
-                ((camp_df["Year"] > from_year) |
-                 ((camp_df["Year"] == from_year) & (camp_df["Month"] >= from_m))) &
-                ((camp_df["Year"] < to_year) |
-                 ((camp_df["Year"] == to_year) & (camp_df["Month"] <= to_m)))
-            ]
+            camp_df["Year"]  = pd.to_numeric(camp_df["Year"],  errors="coerce").fillna(0).astype(int)
+            camp_df["Month"] = pd.to_numeric(camp_df["Month"], errors="coerce").fillna(0).astype(int)
+            _filtered = camp_df[(camp_df["Year"]==_now_c.year) & (camp_df["Month"]==_now_c.month)]
+            if len(_filtered) > 0:
+                camp_df = _filtered
+            else:
+                max_yr = camp_df["Year"].max()
+                max_mo = camp_df[camp_df["Year"]==max_yr]["Month"].max()
+                camp_df = camp_df[(camp_df["Year"]==max_yr)&(camp_df["Month"]==max_mo)]
         camp_df = camp_df.groupby("Campaign Objective").agg({
             "Spend ($)":"sum","CRM Leads":"sum",
             "Appointments":"sum","Customers":"sum","Sales Amount ($)":"sum"
@@ -447,8 +412,7 @@ if st.session_state.page == "overview":
             tb["Sales Amount ($)"]=tb["Sales Amount ($)"].apply(lambda x:fc(x) if x>0 else "—")
         st.dataframe(tb,use_container_width=True,hide_index=True,height=min(600,(len(tb)+1)*35+50)); st.markdown(sb_c(),unsafe_allow_html=True)
 
-# ── PAGE 2 ─────────────────────────────────────────────────────────────────────
-elif st.session_state.page == "territory":
+with t2:
 
     if "Territory Summary" not in data:
         st.warning("No Territory Summary sheet found."); st.stop()
@@ -659,8 +623,7 @@ elif st.session_state.page == "territory":
     tbl_height = max(400, (n_terr+2)*38 + n_camp*34)
     components.html(html, height=tbl_height, scrolling=True)
 
-# ── PAGE 3 ─────────────────────────────────────────────────────────────────────
-elif st.session_state.page == "trends":
+with t3:
 
     if "Campaign Performance" not in data:
         st.warning("No Campaign Performance sheet found."); st.stop()
