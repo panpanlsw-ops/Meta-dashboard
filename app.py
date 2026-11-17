@@ -659,6 +659,8 @@ with t3:
     full_df["Year"]  = pd.to_numeric(full_df["Year"],  errors="coerce").fillna(0).astype(int)
     full_df["Month"] = pd.to_numeric(full_df["Month"], errors="coerce").fillna(0).astype(int)
     camp_col = "Campaign Objective" if "Campaign Objective" in full_df.columns else "Campaign"
+    # Clean URL-encoded names in full_df too (used for chart trends)
+    full_df[camp_col] = full_df[camp_col].apply(lambda s: 'Other' if '+' in str(s) or '%' in str(s) or str(s).strip() in ['0','','nan','Unknown campaign'] else str(s))
 
     # Selected date range
     camp_df = full_df[
@@ -668,9 +670,22 @@ with t3:
          ((full_df["Year"] == t3_ty) & (full_df["Month"] <= t3_to_m)))
     ].copy()
 
+    # Clean URL-encoded campaign names (e.g. Leads+-+Broad+-+San+Diego) → 'Other'
+    def clean_camp_name(name):
+        s = str(name)
+        if '+' in s or '%' in s or s.strip() in ['0', '', 'nan', 'Unknown campaign']:
+            return 'Other'
+        return s
+    camp_df = camp_df.copy()
+    camp_df[camp_col] = camp_df[camp_col].apply(clean_camp_name)
+
     # Aggregate by campaign
     num_cols = {c:"sum" for c in ["Spend ($)","CRM Leads","Appointments","Customers","Sales Amount ($)"] if c in camp_df.columns}
     camp_agg = camp_df.groupby(camp_col).agg(num_cols).reset_index()
+
+    # Filter out campaigns with 0 leads AND the 'Other' bucket if it also has 0 leads
+    camp_agg = camp_agg[camp_agg["CRM Leads"] > 0].copy()
+
     camp_agg["ROI"]       = camp_agg.apply(lambda r: (r["Sales Amount ($)"]-r["Spend ($)"])/r["Spend ($)"]*100 if r["Spend ($)"]>0 else 0, axis=1)
     camp_agg["APT/Lead"]  = camp_agg.apply(lambda r: r["Appointments"]/r["CRM Leads"]*100 if r["CRM Leads"]>0 else 0, axis=1)
     camp_agg["Order/APT"] = camp_agg.apply(lambda r: r["Customers"]/r["Appointments"]*100 if r["Appointments"]>0 else 0, axis=1)
